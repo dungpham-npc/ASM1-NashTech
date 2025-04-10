@@ -149,5 +149,5 @@ This project is for educational and assignment purposes. License to be added lat
 - **GitHub:** [@dungpham-npc](https://github.com/dungpham-npc)
 
 ## Database Schema
-![DB](asset/BE_db.png)
+![DB](assets/BE_db.png)
 
