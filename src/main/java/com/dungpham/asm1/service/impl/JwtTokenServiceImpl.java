@@ -1,7 +1,7 @@
 package com.dungpham.asm1.service.impl;
 
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
-import com.dungpham.asm1.service.service.JwtTokenService;
+import com.dungpham.asm1.service.JwtTokenService;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;

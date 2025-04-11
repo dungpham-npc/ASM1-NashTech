@@ -1,7 +1,7 @@
 package com.dungpham.asm1.infrastructure.security;
 
-import com.dungpham.asm1.service.service.JwtTokenService;
-import com.dungpham.asm1.service.service.UserService;
+import com.dungpham.asm1.service.JwtTokenService;
+import com.dungpham.asm1.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,7 +34,7 @@ public class SecurityConfig {
     };
 
     private final String[] PUBLIC_LIST = {
-            "/api/v1/users/login", "/api/v1/users/password"
+            "/api/v1/users/login", "/api/v1/users/password", "/api/v1/**"
     };
 
     @Bean
