@@ -3,7 +3,7 @@ package com.dungpham.asm1.facade.impl;
 import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.UserException;
 import com.dungpham.asm1.entity.User;
-import com.dungpham.asm1.facade.facade.UserFacade;
+import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.request.LoginRequest;
 import com.dungpham.asm1.request.RegisterRequest;
@@ -52,10 +52,8 @@ public class UserFacadeImpl implements UserFacade {
 
         return LoginResponse.builder()
                 .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
                 .accessToken(accessToken)
-                .roles(user.getRole())
+                .role(user.getRole().getName())
                 .build();
     }
 }

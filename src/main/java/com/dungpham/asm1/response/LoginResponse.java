@@ -1,6 +1,6 @@
 package com.dungpham.asm1.response;
 
-import com.dungpham.asm1.common.enums.Role;
+import com.dungpham.asm1.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,5 +15,5 @@ public class LoginResponse {
     private String firstName;
     private String lastName;
     private String accessToken;
-    private Role roles;
+    private String role;
 }
