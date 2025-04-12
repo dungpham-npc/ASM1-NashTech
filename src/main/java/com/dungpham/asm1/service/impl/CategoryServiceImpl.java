@@ -2,7 +2,7 @@ package com.dungpham.asm1.service.impl;
 
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.repository.CategoryRepository;
-import com.dungpham.asm1.response.CategoryListResponse;
+import com.dungpham.asm1.response.CategoryResponse;
 import com.dungpham.asm1.service.CategoryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Logged
-    public List<CategoryListResponse> getAllCategories() {
+    public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findCategoryWithProductCount();
     }
 }
