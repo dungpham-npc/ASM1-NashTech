@@ -21,17 +21,15 @@ public class Order extends BaseEntity {
     @JoinColumn(nullable = false)
     private User user;
 
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private RecipientInformation recipientInformation;
+
     @Column(nullable = false, length = 20)
     private String orderCode;
 
     @Column(length = 20)
     private String deliveryCode;
-
-    @Column(nullable = false, length = 200)
-    private String userAddress;
-
-    @Column(nullable = false, length = 15)
-    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

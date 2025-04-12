@@ -34,5 +34,6 @@ public class Product extends BaseEntity {
     private List<ProductRating> ratings = new ArrayList<>();
 
     @ElementCollection
-    private List<String> imageKeys = new ArrayList<>();
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    private List<ProductImage> images = new ArrayList<>();
 }
