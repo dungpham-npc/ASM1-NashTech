@@ -1,4 +1,13 @@
 package com.dungpham.asm1.response;
 
-public record CategoryResponse(String name, Long numberOfAssociatedProducts) {
+import lombok.*;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Builder
+@Setter
+public class CategoryResponse {
+    private Long id;
+    private String name;
 }

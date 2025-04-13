@@ -1,8 +1,11 @@
 package com.dungpham.asm1.service.impl;
 
+import com.dungpham.asm1.common.enums.ErrorCode;
+import com.dungpham.asm1.common.exception.CategoryException;
+import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.repository.CategoryRepository;
-import com.dungpham.asm1.response.CategoryResponse;
+import com.dungpham.asm1.response.CategoryListResponse;
 import com.dungpham.asm1.service.CategoryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +19,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Logged
-    public List<CategoryResponse> getAllCategories() {
+    public List<CategoryListResponse> getAllCategories() {
         return categoryRepository.findCategoryWithProductCount();
+    }
+
+    @Override
+    @Logged
+    public Category getCategory(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 }

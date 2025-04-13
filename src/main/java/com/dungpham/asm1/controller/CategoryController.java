@@ -2,7 +2,7 @@ package com.dungpham.asm1.controller;
 
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.response.BaseResponse;
-import com.dungpham.asm1.response.CategoryResponse;
+import com.dungpham.asm1.response.CategoryListResponse;
 import com.dungpham.asm1.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class CategoryController {
             summary = "Get all categories with product count",
             tags = {"Category APIs"})
     @Logged
-    public BaseResponse<List<CategoryResponse>> getAllCategories() {
+    public BaseResponse<List<CategoryListResponse>> getAllCategories() {
         return BaseResponse.build(categoryService.getAllCategories(), true);
     }
 }
