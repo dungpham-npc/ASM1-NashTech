@@ -30,7 +30,7 @@ public class SecurityConfig {
     }
 
     private final String[] WHITE_LIST = {
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
+            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html", "/api/v1/**"
     };
 
     private final String[] PUBLIC_LIST = {

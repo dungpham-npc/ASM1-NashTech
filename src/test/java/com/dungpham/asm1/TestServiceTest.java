@@ -11,7 +11,7 @@ public class TestServiceTest {
     @Test
     void testAddition() {
         // given
-        int a = 6;
+        int a = 5;
         int b = 7;
 
         // when

@@ -10,10 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface ProductService {
-    void addProduct(String name, double price, int quantity);
-    void updateProduct(int id, String name, double price, int quantity);
-    void deleteProduct(int id);
-    void getProductById(int id);
+    Product createProduct(Product product);
+    Product updateProduct(Product product);
+    void removeProduct(Long id);
+    Product getProductById(Long id);
     List<Product> getFeaturedProducts();
     Page<Product> getAllProducts(Specification<Product> spec, Pageable pageable);
 }
