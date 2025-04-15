@@ -24,4 +24,6 @@ public interface ProductFacade {
     BaseResponse<ProductDetailsResponse> updateProduct(CreateOrUpdateProductRequest request, Long id);
 
     BaseResponse<Void> removeProduct(Long id);
+
+    BaseResponse<String> rateProduct(Long productId, Integer rating);
 }

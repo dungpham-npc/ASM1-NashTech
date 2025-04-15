@@ -2,9 +2,11 @@ package com.dungpham.asm1.facade.impl;
 
 import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.CategoryException;
+import com.dungpham.asm1.common.exception.UserException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.entity.ProductImage;
+import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.facade.ProductFacade;
 import com.dungpham.asm1.request.CreateOrUpdateProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
@@ -12,7 +14,9 @@ import com.dungpham.asm1.response.CategoryResponse;
 import com.dungpham.asm1.response.ProductDetailsResponse;
 import com.dungpham.asm1.response.ProductResponse;
 import com.dungpham.asm1.service.CategoryService;
+import com.dungpham.asm1.service.ProductRatingService;
 import com.dungpham.asm1.service.ProductService;
+import com.dungpham.asm1.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -31,6 +35,8 @@ public class ProductFacadeImpl implements ProductFacade {
     private final ProductService productService;
     private final ModelMapper modelMapper;
     private final CategoryService categoryService;
+    private final ProductRatingService productRatingService;
+    private final UserService userService;
 
 
     @Override
@@ -129,6 +135,18 @@ public class ProductFacadeImpl implements ProductFacade {
         return BaseResponse.build(null, true);
     }
 
+    @Override
+    public BaseResponse<String> rateProduct(Long productId, Integer rating) {
+        Product product = productService.getProductById(productId);
+//        User user = userService.getCurrentUser()
+//                .orElseThrow(() -> new UserException(ErrorCode.SECURITY_ERROR));
+        User user = userService.getUserByEmail("test@example.com"); //TODO: Replace with actual user retrieval logic
+
+
+        productRatingService.rateProduct(product, user, rating);
+        return BaseResponse.build("Rating successful", true);
+    }
+
     private Product toProductEntity(CreateOrUpdateProductRequest request) {
         Product product = modelMapper.map(request, Product.class);
 
@@ -161,7 +179,7 @@ public class ProductFacadeImpl implements ProductFacade {
                 .map(ProductImage::getImageKey)
                 .toList());
         response.setCategory(categoryResponse);
-        response.setAverageRating(null);  //TODO: Implement average rating calculation
+        response.setAverageRating(productRatingService.getAverageRatingOfProduct(product));
 
         return response;
     }

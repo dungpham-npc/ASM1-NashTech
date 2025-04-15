@@ -33,7 +33,7 @@ public class UserFacadeImpl implements UserFacade {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        User user = userService.findByEmail(request.getEmail());
+        User user = userService.getUserByEmail(request.getEmail());
 
         boolean isNotActive = !user.isActive();
         if (isNotActive) throw new UserException(ErrorCode.USER_IS_DEACTIVATED);

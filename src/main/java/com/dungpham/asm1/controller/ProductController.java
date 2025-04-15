@@ -105,8 +105,21 @@ public class ProductController {
             summary = "Delete a product",
             tags = {"Product APIs"})
     @Logged
-    public BaseResponse<Void> deleteProduct(@PathVariable Long id) {
-        return productFacade.removeProduct(id);
+    public BaseResponse<String> deleteProduct(@PathVariable Long id) {
+        productFacade.removeProduct(id);
+        return BaseResponse.build("Product deleted successfully", true);
+    }
+
+    @PostMapping("/{id}/rate")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Rate a product",
+            tags = {"Product APIs"})
+    @Logged
+    public BaseResponse<String> rateProduct(
+            @PathVariable Long id,
+            @RequestParam Integer rating) {
+        return productFacade.rateProduct(id, rating);
     }
 
 }
