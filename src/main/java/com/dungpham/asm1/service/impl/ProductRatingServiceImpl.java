@@ -49,7 +49,7 @@ public class ProductRatingServiceImpl implements ProductRatingService {
             throw new ProductRatingException(ErrorCode.USER_NOT_FOUND);
         }
 
-        if (productRatingRepository.existsByUserId(user.getId())) {
+        if (productRatingRepository.existsByUserIdAndProductId(user.getId(), product.getId())) {
             throw new ProductRatingException(ErrorCode.PRODUCT_ALREADY_RATED);
         }
 

@@ -3,6 +3,7 @@ package com.dungpham.asm1.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,5 +25,5 @@ public class User extends BaseEntity {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RecipientInformation> recipientInformation = new java.util.ArrayList<>();
+    private List<RecipientInformation> recipientInformation = new ArrayList<>();
 }
