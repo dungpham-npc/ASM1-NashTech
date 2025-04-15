@@ -1,6 +1,6 @@
 package com.dungpham.asm1.controller;
 
-import com.dungpham.asm1.facade.facade.UserFacade;
+import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.request.LoginRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.LoginResponse;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
     private final UserFacade userFacade;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;  //TODO: Remove this line on release
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -31,5 +31,5 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public String getTestEncodedPassword(String password) {
         return passwordEncoder.encode(password);
-    }
+    } //TODO: Remove this method on release
 }

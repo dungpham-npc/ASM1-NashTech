@@ -1,4 +1,4 @@
-package com.dungpham.asm1.service.service;
+package com.dungpham.asm1.service;
 
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 

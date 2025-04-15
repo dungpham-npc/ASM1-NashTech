@@ -5,7 +5,7 @@ import com.dungpham.asm1.common.exception.UserException;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.repository.UserRepository;
-import com.dungpham.asm1.service.service.UserService;
+import com.dungpham.asm1.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public User findByEmail(String mail) {
+    public User getUserByEmail(String mail) {
         return userRepository
                 .findByEmail(mail)
                 .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));

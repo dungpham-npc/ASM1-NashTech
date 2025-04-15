@@ -1,13 +1,12 @@
-package com.dungpham.asm1.service.service;
+package com.dungpham.asm1.service;
 
 import com.dungpham.asm1.entity.User;
-import org.springframework.data.domain.Page;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.Optional;
 
 public interface UserService extends UserDetailsService {
-    User findByEmail(String mail);
+    User getUserByEmail(String mail);
 
 //    void validateSignUp(RegisterRequest request);
 

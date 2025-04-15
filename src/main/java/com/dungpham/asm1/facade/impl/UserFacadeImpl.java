@@ -3,14 +3,14 @@ package com.dungpham.asm1.facade.impl;
 import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.UserException;
 import com.dungpham.asm1.entity.User;
-import com.dungpham.asm1.facade.facade.UserFacade;
+import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.request.LoginRequest;
 import com.dungpham.asm1.request.RegisterRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.LoginResponse;
-import com.dungpham.asm1.service.service.JwtTokenService;
-import com.dungpham.asm1.service.service.UserService;
+import com.dungpham.asm1.service.JwtTokenService;
+import com.dungpham.asm1.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,7 +33,7 @@ public class UserFacadeImpl implements UserFacade {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        User user = userService.findByEmail(request.getEmail());
+        User user = userService.getUserByEmail(request.getEmail());
 
         boolean isNotActive = !user.isActive();
         if (isNotActive) throw new UserException(ErrorCode.USER_IS_DEACTIVATED);
@@ -52,10 +52,8 @@ public class UserFacadeImpl implements UserFacade {
 
         return LoginResponse.builder()
                 .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
                 .accessToken(accessToken)
-                .roles(user.getRole())
+                .role(user.getRole().getName())
                 .build();
     }
 }

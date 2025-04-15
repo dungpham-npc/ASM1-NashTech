@@ -1,8 +1,9 @@
 package com.dungpham.asm1.entity;
 
-import com.dungpham.asm1.common.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -18,13 +19,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 200)
     private String password;
 
-    @Column(nullable = false, length = 40)
-    private String firstName;
-
-    @Column(nullable = false, length = 40)
-    private String lastName;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
     private Role role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RecipientInformation> recipientInformation = new java.util.ArrayList<>();
 }
