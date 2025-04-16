@@ -1,23 +1,28 @@
 package com.dungpham.asm1.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Builder
 public class BaseResponse<T> {
-    private boolean isStatus;
-    private T metadata;
+    @JsonIgnore
+    private boolean status;
 
-    public static <T> BaseResponse<T> build(T data, boolean isStatus) {
-        return (BaseResponse<T>) BaseResponse.builder().isStatus(isStatus).metadata(data).build();
-    }
+    private String code;
+    private String message;
+    private T data;
 
-    public static <T> BaseResponse<T> ok() {
-        return (BaseResponse<T>) BaseResponse.builder().isStatus(true).metadata("Success").build();
+    public static <T> BaseResponse<T> build(T data, boolean status) {
+        BaseResponse<T> response = new BaseResponse<>();
+        response.setData(data);
+        response.setStatus(status);
+        response.setCode(status ? "200" : null);
+        response.setMessage(status ? "Success" : null);
+        return response;
     }
 }
