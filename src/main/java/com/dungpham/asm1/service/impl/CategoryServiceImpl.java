@@ -72,6 +72,9 @@ public class CategoryServiceImpl implements CategoryService {
                 if (category.getDescription() == null || category.getDescription().isEmpty()) {
                     throw new InvalidArgumentException("description", "Category description cannot be empty");
                 }
+                if (categoryRepository.findByNameAndIsActiveTrue(category.getName()).isPresent()) {
+                    throw new ConflictException("Category name already exists");
+                }
                 break;
 
             case "delete":

@@ -1,5 +1,6 @@
 package com.dungpham.asm1.service.impl;
 
+import com.dungpham.asm1.common.exception.ConflictException;
 import com.dungpham.asm1.common.exception.InvalidArgumentException;
 import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +49,7 @@ class ProductServiceImplTest {
 
         // Use reflection to set the ID
         try {
-            java.lang.reflect.Field idField = validCategory.getClass().getSuperclass().getDeclaredField("id");
+            Field idField = validCategory.getClass().getSuperclass().getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(validCategory, 1L);
         } catch (Exception e) {
@@ -80,26 +82,30 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).save(validProduct);
     }
 
-//    @Test
-//    void createProduct_WithExistingId_ThrowsException() {
-//        // Arrange
-//        // Set ID using reflection
-//        try {
-//            java.lang.reflect.Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
-//            idField.setAccessible(true);
-//            idField.set(validProduct, 1L);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Act & Assert
-//        InvalidArgumentException exception = assertThrows(InvalidArgumentException.class, () -> {
-//            productService.createProduct(validProduct);
-//        });
-//
-//        assertEquals("400", exception.getErrorCodeString());
-//        verify(productRepository, never()).save(any(Product.class));
-//    }
+    @Test
+    void createProduct_WithExistingId_ThrowsException() {
+        // Arrange
+        // Set ID using reflection
+        try {
+            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(validProduct, 1L);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Act & Assert
+        when(productRepository.findById(1L)).thenReturn(Optional.of(validProduct));
+
+        // Act & Assert
+        ConflictException exception = assertThrows(ConflictException.class, () -> {
+            productService.createProduct(validProduct);
+        });
+
+        assertEquals("409", exception.getErrorCodeString());
+        verify(productRepository, times(1)).findById(1L);
+        verify(productRepository, never()).save(any(Product.class));
+    }
 
     @Test
     void updateProduct_Successfully() {
@@ -108,7 +114,7 @@ class ProductServiceImplTest {
 
         // Set ID using reflection
         try {
-            java.lang.reflect.Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
+            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(validProduct, productId);
         } catch (Exception e) {
@@ -125,7 +131,7 @@ class ProductServiceImplTest {
         assertNotNull(result);
         assertEquals(productId, result.getId());
         assertEquals("Test Product", result.getName());
-        verify(productRepository, times(1)).findById(productId);
+        verify(productRepository, times(2)).findById(productId);
         verify(productRepository, times(1)).save(validProduct);
     }
 
@@ -136,7 +142,7 @@ class ProductServiceImplTest {
 
         // Set ID using reflection
         try {
-            java.lang.reflect.Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
+            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(validProduct, nonExistentId);
         } catch (Exception e) {
@@ -151,7 +157,7 @@ class ProductServiceImplTest {
         });
 
         assertEquals("404", exception.getErrorCodeString());
-        verify(productRepository, times(1)).findById(nonExistentId);
+        verify(productRepository, times(2)).findById(nonExistentId);
         verify(productRepository, never()).save(any(Product.class));
     }
 
@@ -228,7 +234,7 @@ class ProductServiceImplTest {
 
         // Set ID using reflection
         try {
-            java.lang.reflect.Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
+            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(validProduct, productId);
         } catch (Exception e) {
@@ -290,7 +296,7 @@ class ProductServiceImplTest {
 
         // Set ID using reflection
         try {
-            java.lang.reflect.Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
+            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(validProduct, productId);
         } catch (Exception e) {

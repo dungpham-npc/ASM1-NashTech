@@ -20,4 +20,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<CategoryListResponse> findCategoryWithProductCount();
 
     Optional<Category> findByIdAndIsActiveTrue(Long id);
+
+    Optional<Category> findByNameAndIsActiveTrue(String name);
 }
