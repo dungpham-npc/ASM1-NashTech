@@ -1,8 +1,7 @@
 package com.dungpham.asm1.facade.impl;
 
 import com.dungpham.asm1.common.enums.ErrorCode;
-import com.dungpham.asm1.common.exception.CategoryException;
-import com.dungpham.asm1.common.exception.UserException;
+import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.entity.ProductImage;
@@ -113,7 +112,7 @@ public class ProductFacadeImpl implements ProductFacade {
     @Override
     public BaseResponse<ProductDetailsResponse> updateProduct(CreateOrUpdateProductRequest request, Long id) {
         if (categoryService.getCategory(request.getCategoryId()) == null) {
-            throw new CategoryException(ErrorCode.CATEGORY_NOT_FOUND);
+            throw new NotFoundException("Category");
         }
 
         Product product = productService.getProductById(id);

@@ -1,7 +1,7 @@
 package com.dungpham.asm1.service.impl;
 
 import com.dungpham.asm1.common.enums.ErrorCode;
-import com.dungpham.asm1.common.exception.UserException;
+import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.repository.UserRepository;
@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
     public User getUserByEmail(String mail) {
         return userRepository
                 .findByEmail(mail)
-                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("User"));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
         User user =
                 userRepository
                         .findByEmail(mail)
-                        .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+                        .orElseThrow(() -> new NotFoundException("User"));
 
         List<GrantedAuthority> authorityList =
                 List.of(new SimpleGrantedAuthority(user.getRole().toString()));

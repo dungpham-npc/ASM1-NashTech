@@ -1,7 +1,7 @@
 package com.dungpham.asm1.facade.impl;
 
 import com.dungpham.asm1.common.enums.ErrorCode;
-import com.dungpham.asm1.common.exception.UserException;
+import com.dungpham.asm1.common.exception.ForbiddenException;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
@@ -36,7 +36,7 @@ public class UserFacadeImpl implements UserFacade {
         User user = userService.getUserByEmail(request.getEmail());
 
         boolean isNotActive = !user.isActive();
-        if (isNotActive) throw new UserException(ErrorCode.USER_IS_DEACTIVATED);
+        if (isNotActive) throw new ForbiddenException("this user account");
 
         SecurityUserDetails userPrinciple = (SecurityUserDetails) authentication.getPrincipal();
         return BaseResponse.build(buildLoginResponse(userPrinciple, user), true);
