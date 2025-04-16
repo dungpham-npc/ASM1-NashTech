@@ -1,6 +1,5 @@
 package com.dungpham.asm1.service.impl;
 
-import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.ConflictException;
 import com.dungpham.asm1.common.exception.InvalidArgumentException;
 import com.dungpham.asm1.common.exception.NotFoundException;
@@ -26,10 +25,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @Logged
     public Product createProduct(Product product) {
-        if (productRepository.findById(product.getId()).isPresent()) {
-            throw new ConflictException("Product");
-        }
-        validateProduct(product);
+        validateProduct(product, false);
 
         return productRepository.save(product);
     }
@@ -38,15 +34,20 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @Logged
     public Product updateProduct(Product product) {
-        if (productRepository.findById(product.getId()).isEmpty()) {
-            throw new NotFoundException("Product");
-        }
-        validateProduct(product);
+        validateProduct(product, true);
 
         return productRepository.save(product);
     }
 
-    private void validateProduct(Product product) {
+    private void validateProduct(Product product, boolean isUpdate) {
+        if (productRepository.findById(product.getId()).isPresent() && !isUpdate) {
+            throw new ConflictException("Product");
+        }
+
+        if (productRepository.findById(product.getId()).isEmpty() && isUpdate) {
+            throw new NotFoundException("Product");
+        }
+
         if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidArgumentException("price", "Price must be greater than 0");
         }

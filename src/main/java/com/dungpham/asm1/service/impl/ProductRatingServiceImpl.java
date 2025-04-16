@@ -55,7 +55,7 @@ public class ProductRatingServiceImpl implements ProductRatingService {
             throw new NotFoundException("User");
         }
 
-        if (productRatingRepository.existsByUserId(user.getId())) {
+        if (productRatingRepository.existsByUserIdAndProductId(user.getId(), product.getId())) {
             throw new ConflictException("User rating");
         }
 

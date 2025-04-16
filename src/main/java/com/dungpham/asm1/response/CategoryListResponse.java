@@ -1,4 +1,4 @@
 package com.dungpham.asm1.response;
 
-public record CategoryListResponse(String name, Long numberOfAssociatedProducts) {
+public record CategoryListResponse(Long id, String name, Long numberOfAssociatedProducts) {
 }
