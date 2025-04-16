@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface ProductRatingRepository extends JpaRepository<ProductRating, Long> {
-    boolean existsByUserId(Long userId);
+    boolean existsByUserIdAndProductId(Long userId, Long productId);
 
     @Query("SELECT AVG(r.rating) FROM ProductRating r WHERE r.product.id = :productId")
     Double findAverageRatingByProductId(@Param("productId") Long productId);
