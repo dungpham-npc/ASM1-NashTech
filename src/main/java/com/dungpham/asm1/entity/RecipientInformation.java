@@ -24,7 +24,7 @@ public class RecipientInformation extends BaseEntity{
     private String address;
 
     @Column(nullable = false)
-    private Boolean isDefault;
+    private Boolean isDefault = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

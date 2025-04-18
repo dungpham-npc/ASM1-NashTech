@@ -20,7 +20,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 200)
     private String password;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(nullable = false)
     private Role role;
 

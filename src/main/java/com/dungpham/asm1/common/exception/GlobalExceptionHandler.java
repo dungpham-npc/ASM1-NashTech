@@ -65,6 +65,12 @@ public class GlobalExceptionHandler {
         return buildSimpleError("IO_ERROR", ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleNullPointer(NullPointerException ex) {
+        ex.printStackTrace();
+        return buildSimpleError("NULL_POINTER_EXCEPTION", ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleGeneric(Exception ex) {

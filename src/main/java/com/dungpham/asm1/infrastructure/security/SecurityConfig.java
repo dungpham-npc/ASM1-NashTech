@@ -1,7 +1,8 @@
 package com.dungpham.asm1.infrastructure.security;
 
 import com.dungpham.asm1.service.JwtTokenService;
-import com.dungpham.asm1.service.UserService;
+import com.dungpham.asm1.service.impl.UserDetailsServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,21 +21,27 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
-    private final UserService userService;
+    private final UserDetailsServiceImpl userService;
     private final JwtTokenService jwtTokenService;
-
-    public SecurityConfig(UserService userService, JwtTokenService jwtTokenService) {
-        this.userService = userService;
-        this.jwtTokenService = jwtTokenService;
-    }
 
     private final String[] WHITE_LIST = {
             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html", "/api/v1/**"
     };
 
     private final String[] PUBLIC_LIST = {
-            "/api/v1/users/login", "/api/v1/users/password", "/api/v1/**"
+            // Authentication
+            "/api/v1/users/login",
+            "/api/v1/users/password", // TODO: Remove this in production as noted in your controller
+
+            // Public product browsing
+            "/api/v1/products",
+            "/api/v1/products/featured",
+            "/api/v1/products/{id}",
+
+            // Public category browsing
+            "/api/v1/categories"
     };
 
     @Bean

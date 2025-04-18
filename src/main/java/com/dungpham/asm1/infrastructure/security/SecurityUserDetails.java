@@ -21,6 +21,7 @@ public class SecurityUserDetails implements UserDetails {
     private String phone;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
+    private User user;
 
     public static SecurityUserDetails build(User user, List<GrantedAuthority> authorityList) {
         return SecurityUserDetails.builder()
@@ -28,6 +29,7 @@ public class SecurityUserDetails implements UserDetails {
                 .email(user.getEmail())
                 .password(user.getPassword())
                 .authorities(authorityList)
+                .user(user)
                 .build();
     }
 

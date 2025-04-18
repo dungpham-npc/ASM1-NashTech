@@ -1,7 +1,7 @@
 package com.dungpham.asm1.service.impl;
 
 import com.dungpham.asm1.common.enums.ErrorCode;
-import com.dungpham.asm1.common.exception.CategoryException;
+import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.repository.CategoryRepository;
@@ -27,6 +27,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Logged
     public Category getCategory(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("Category"));
     }
 }
