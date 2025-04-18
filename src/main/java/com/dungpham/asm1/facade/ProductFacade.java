@@ -1,7 +1,7 @@
 package com.dungpham.asm1.facade;
 
 import com.dungpham.asm1.entity.Product;
-import com.dungpham.asm1.request.CreateOrUpdateProductRequest;
+import com.dungpham.asm1.request.ProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.ProductDetailsResponse;
 import com.dungpham.asm1.response.ProductResponse;
@@ -19,9 +19,9 @@ public interface ProductFacade {
 
     BaseResponse<ProductDetailsResponse> getProductDetails(Long id);
 
-    BaseResponse<ProductDetailsResponse> createProduct(CreateOrUpdateProductRequest request, List<MultipartFile> productImages);
+    BaseResponse<ProductDetailsResponse> createProduct(ProductRequest request, List<MultipartFile> productImages);
 
-    BaseResponse<ProductDetailsResponse> updateProduct(CreateOrUpdateProductRequest request, Long id);
+    BaseResponse<ProductDetailsResponse> updateProduct(ProductRequest request, Long id);
 
     BaseResponse<Void> removeProduct(Long id);
 

@@ -3,7 +3,7 @@ package com.dungpham.asm1.controller;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.facade.ProductFacade;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
-import com.dungpham.asm1.request.CreateOrUpdateProductRequest;
+import com.dungpham.asm1.request.ProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.ProductDetailsResponse;
 import com.dungpham.asm1.response.ProductResponse;
@@ -83,7 +83,7 @@ public class ProductController {
     @Logged
     public BaseResponse<ProductDetailsResponse> createProduct(
             @RequestPart(value = "productImages") List<MultipartFile> productImages,
-            @RequestPart(value = "request") CreateOrUpdateProductRequest request) {
+            @RequestPart(value = "request") ProductRequest request) {
         return productFacade.createProduct(request, productImages);
     }
 
@@ -95,7 +95,7 @@ public class ProductController {
     @Logged
     public BaseResponse<ProductDetailsResponse> updateProduct(
             @PathVariable Long id,
-            @RequestBody CreateOrUpdateProductRequest request) {
+            @RequestBody ProductRequest request) {
         return productFacade.updateProduct(request, id);
     }
 

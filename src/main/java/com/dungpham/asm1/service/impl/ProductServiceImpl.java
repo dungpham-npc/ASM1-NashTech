@@ -1,7 +1,8 @@
 package com.dungpham.asm1.service.impl;
 
-import com.dungpham.asm1.common.enums.ErrorCode;
-import com.dungpham.asm1.common.exception.ProductException;
+import com.dungpham.asm1.common.exception.ConflictException;
+import com.dungpham.asm1.common.exception.InvalidArgumentException;
+import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.repository.ProductRepository;
@@ -24,10 +25,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @Logged
     public Product createProduct(Product product) {
-        if (product.getId() != null) {
-            throw new ProductException(ErrorCode.PRODUCT_ID_IS_NOT_NULL);
-        }
-        validateProduct(product);
+        validateProduct(product, false);
 
         return productRepository.save(product);
     }
@@ -36,29 +34,34 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @Logged
     public Product updateProduct(Product product) {
-        if (productRepository.findById(product.getId()).isEmpty()) {
-            throw new ProductException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
-        validateProduct(product);
+        validateProduct(product, true);
 
         return productRepository.save(product);
     }
 
-    private void validateProduct(Product product) {
+    private void validateProduct(Product product, boolean isUpdate) {
+        if (productRepository.findById(product.getId()).isPresent() && !isUpdate) {
+            throw new ConflictException("Product");
+        }
+
+        if (productRepository.findById(product.getId()).isEmpty() && isUpdate) {
+            throw new NotFoundException("Product");
+        }
+
         if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ProductException(ErrorCode.PRICE_SMALLER_THAN_ZERO);
+            throw new InvalidArgumentException("price", "Price must be greater than 0");
         }
 
         if (product.getName() == null || product.getName().isEmpty()) {
-            throw new ProductException(ErrorCode.PRODUCT_NAME_EMPTY);
+            throw new InvalidArgumentException("name", "Product name cannot be empty");
         }
 
         if (product.getDescription() == null || product.getDescription().isEmpty()) {
-            throw new ProductException(ErrorCode.PRODUCT_DESCRIPTION_EMPTY);
+            throw new InvalidArgumentException("description", "Product description cannot be empty");
         }
 
         if (product.getCategory() == null || product.getCategory().getId() == null) {
-            throw new ProductException(ErrorCode.CATEGORY_NOT_FOUND);
+            throw new NotFoundException("Category");
         }
     }
 
@@ -67,7 +70,7 @@ public class ProductServiceImpl implements ProductService {
     @Logged
     public void removeProduct(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("Product"));
         product.setActive(false);
 
         productRepository.save(product);
@@ -78,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
     public Product getProductById(Long id) {
         return productRepository
                 .findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new ProductException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("Product"));
     }
 
     @Override
