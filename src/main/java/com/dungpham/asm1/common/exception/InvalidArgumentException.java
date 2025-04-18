@@ -9,7 +9,5 @@ public class InvalidArgumentException extends AppException{
         super(ErrorCode.INVALID_ARGUMENT, argumentName, reason);
         log.info("InvalidArgumentException instantiated: argumentName={}, reason={}, formattedMessage={}, super.getMessage()={}",
                 argumentName, reason, getFormattedMessage(), super.getMessage());
-        System.err.println("[InvalidArgumentException] instantiated: argumentName=" + argumentName +
-                ", reason=" + reason + ", formattedMessage=" + getFormattedMessage());
     }
 }

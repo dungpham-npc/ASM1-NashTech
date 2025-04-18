@@ -6,16 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
-public class CreateOrUpdateProductRequest {
+public class ProductRequest {
     @NotNull(message = "Name is required")
     @NotBlank(message = "Name cannot be blank")
     @Size(max = 100, message = "Name cannot exceed 100 characters")

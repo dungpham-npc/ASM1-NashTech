@@ -3,7 +3,7 @@ package com.dungpham.asm1.controller;
 import com.dungpham.asm1.common.util.Util;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
-import com.dungpham.asm1.request.CreateOrUpdateCategoryRequest;
+import com.dungpham.asm1.request.CategoryRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.CategoryDetailsResponse;
 import com.dungpham.asm1.response.CategoryListResponse;
@@ -52,7 +52,7 @@ public class CategoryController {
             summary = "Create a new category",
             tags = {tag})
     @Logged
-    public BaseResponse<CategoryDetailsResponse> createCategory(@RequestBody CreateOrUpdateCategoryRequest request) {
+    public BaseResponse<CategoryDetailsResponse> createCategory(@RequestBody CategoryRequest request) {
         Category category = modelMapper.map(request, Category.class);
         Category createdCategory = categoryService.createCategory(category);
         return BaseResponse.build(toCategoryDetailsResponse(createdCategory), true);
@@ -65,7 +65,7 @@ public class CategoryController {
             tags = {tag})
     @Logged
     public BaseResponse<CategoryDetailsResponse> updateCategory(
-            @PathVariable Long id, @RequestBody CreateOrUpdateCategoryRequest request) {
+            @PathVariable Long id, @RequestBody CategoryRequest request) {
         Category category = modelMapper.map(request, Category.class);
         Category updatedCategory = categoryService.updateCategory(category, id);
         return BaseResponse.build(toCategoryDetailsResponse(updatedCategory), true);

@@ -27,39 +27,28 @@ public enum ErrorCode {
     private final String messageTemplate;
     private static final Logger logger = LoggerFactory.getLogger(ErrorCode.class);
     public String formatMessage(Object... args) {
-        // Force logging to debug
-        System.err.println("[ErrorCode] formatMessage called: code=" + code +
-                ", template=" + messageTemplate + ", args=" + Arrays.toString(args));
         logger.info("formatMessage called: code={}, template={}, args={}",
                 code, messageTemplate, Arrays.toString(args));
 
         if (args == null || args.length == 0) {
             logger.warn("No args provided for template: {}", messageTemplate);
-            System.err.println("[ErrorCode] No args provided for template: " + messageTemplate);
             return messageTemplate;
         }
-
-        // Validate argument count
+        
         int expectedArgs = countPlaceholders(messageTemplate);
         if (args.length < expectedArgs) {
             logger.error("Insufficient arguments: expected={}, provided={}, template={}, args={}",
                     expectedArgs, args.length, messageTemplate, Arrays.toString(args));
-            System.err.println("[ErrorCode] Insufficient arguments: expected=" + expectedArgs +
-                    ", provided=" + args.length + ", template=" + messageTemplate +
-                    ", args=" + Arrays.toString(args));
             return String.valueOf(args[0]);
         }
 
         try {
             String result = String.format(messageTemplate, args);
             logger.info("formatMessage success: result={}", result);
-            System.err.println("[ErrorCode] formatMessage success: result=" + result);
             return result;
         } catch (Exception e) {
             logger.error("formatMessage failed: template={}, args={}, error={}",
                     messageTemplate, Arrays.toString(args), e.getMessage(), e);
-            System.err.println("[ErrorCode] formatMessage failed: template=" + messageTemplate +
-                    ", args=" + Arrays.toString(args) + ", error=" + e.getMessage());
             e.printStackTrace(System.err);
             return String.valueOf(args[0]);
         }

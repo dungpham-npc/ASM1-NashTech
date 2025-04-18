@@ -23,8 +23,6 @@ public class AppException extends RuntimeException {
         this.formattedMessage = formatMessage(errorCode, messageArg);
         log.info("AppException constructor (ErrorCode, String) called: errorCode={}, formattedMessage={}, super.getMessage()={}",
                 this.errorCode.getCode(), this.formattedMessage, super.getMessage());
-        System.err.println("[AppException] constructor (ErrorCode, String) called: errorCode=" +
-                this.errorCode.getCode() + ", formattedMessage=" + this.formattedMessage);
     }
 
     public AppException(ErrorCode errorCode, Object... messageArgs) {
@@ -33,38 +31,24 @@ public class AppException extends RuntimeException {
         this.formattedMessage = formatMessage(errorCode, messageArgs);
         log.info("AppException constructor (ErrorCode, Object...) called: errorCode={}, formattedMessage={}, args={}, super.getMessage()={}",
                 this.errorCode.getCode(), this.formattedMessage, Arrays.toString(messageArgs), super.getMessage());
-        System.err.println("[AppException] constructor (ErrorCode, Object...) called: errorCode=" +
-                this.errorCode.getCode() + ", formattedMessage=" + this.formattedMessage +
-                ", args=" + Arrays.toString(messageArgs));
     }
 
     private static String formatMessage(ErrorCode errorCode, Object... args) {
         log.debug("formatMessage called: errorCode={}, args={}",
                 errorCode != null ? errorCode.getCode() : "null", Arrays.toString(args));
-        System.err.println("[AppException] formatMessage called: errorCode=" +
-                (errorCode != null ? errorCode.getCode() : "null") +
-                ", args=" + Arrays.toString(args));
         if (errorCode == null) {
             log.error("ErrorCode is null, using fallback: args={}", Arrays.toString(args));
-            System.err.println("[AppException] ErrorCode is null, using fallback: args=" + Arrays.toString(args));
             return args != null && args.length > 0 ? String.valueOf(args[0]) : "Unknown error";
         }
         try {
             log.debug("Attempting to call ErrorCode.formatMessage: errorCode={}, args={}",
                     errorCode.getCode(), Arrays.toString(args));
-            System.err.println("[AppException] Attempting to call ErrorCode.formatMessage: errorCode=" +
-                    errorCode.getCode() + ", args=" + Arrays.toString(args));
             String result = errorCode.formatMessage(args);
             log.debug("Formatted message success: errorCode={}, result={}", errorCode.getCode(), result);
-            System.err.println("[AppException] Formatted message success: errorCode=" +
-                    errorCode.getCode() + ", result=" + result);
             return result;
         } catch (Exception e) {
             log.error("Failed to format message: errorCode={}, template={}, args={}, error={}",
                     errorCode.getCode(), errorCode.getMessageTemplate(), Arrays.toString(args), e.getMessage(), e);
-            System.err.println("[AppException] Failed to format message: errorCode=" + errorCode.getCode() +
-                    ", template=" + errorCode.getMessageTemplate() +
-                    ", args=" + Arrays.toString(args) + ", error=" + e.getMessage());
             e.printStackTrace(System.err);
             return args != null && args.length > 0 ? String.valueOf(args[0]) : errorCode.getMessageTemplate();
         }
