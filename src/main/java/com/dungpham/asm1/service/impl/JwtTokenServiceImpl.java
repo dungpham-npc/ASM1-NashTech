@@ -3,7 +3,9 @@ package com.dungpham.asm1.service.impl;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.service.JwtTokenService;
+import com.dungpham.asm1.service.RedisService;
 import io.jsonwebtoken.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,8 +15,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class JwtTokenServiceImpl implements JwtTokenService {
     @Value("${spring.jwt.secretKey}")
@@ -22,6 +26,10 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     @Value("${spring.jwt.accessTokenExpirationTime}")
     private String accessTokenExpirationTime;
+
+    private final RedisService redisService;
+
+    private static final String TOKEN_BLACKLIST_PREFIX = "blacklisted_token:";
 
     @Override
     public String generateToken(SecurityUserDetails user) {
@@ -37,8 +45,33 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     @Override
+    public void invalidateToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Date expiration = claims.getExpiration();
+            long ttl = Math.max(0, (expiration.getTime() - System.currentTimeMillis()) / 1000);
+
+            redisService.setValue(TOKEN_BLACKLIST_PREFIX + token, "true", ttl, TimeUnit.SECONDS);
+            log.info("Token invalidated and added to blacklist");
+        } catch (Exception e) {
+            log.error("Error invalidating token: {}", e.getMessage());
+        }
+    }
+
+    @Override
     public Boolean validateToken(String token) {
         if (null == token) return false;
+
+        if (redisService.exists(TOKEN_BLACKLIST_PREFIX + token)) {
+            log.info("Token is blacklisted");
+            return false;
+        }
+
         try {
             Jwts.parserBuilder().setSigningKey(secretKey).build().parse(token);
             return true;

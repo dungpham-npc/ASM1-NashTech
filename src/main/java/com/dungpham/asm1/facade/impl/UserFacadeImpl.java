@@ -4,6 +4,7 @@ import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.*;
 import com.dungpham.asm1.common.util.Util;
 import com.dungpham.asm1.entity.RecipientInformation;
+import com.dungpham.asm1.entity.Role;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
@@ -14,6 +15,7 @@ import com.dungpham.asm1.service.JwtTokenService;
 import com.dungpham.asm1.service.RoleService;
 import com.dungpham.asm1.service.UserService;
 import com.dungpham.asm1.service.impl.UserDetailsServiceImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -25,6 +27,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 
@@ -55,9 +59,60 @@ public class UserFacadeImpl implements UserFacade {
         return BaseResponse.build(buildLoginResponse(userPrinciple, user), true);
     }
 
+
+
     @Override
     public BaseResponse<LoginResponse> register(RegisterRequest request) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        User user = modelMapper.map(request, User.class);
+        user.setRole(roleService.getRoleByName("CUSTOMER"));
+
+        User createdUser = userService.createUser(user);
+        if (createdUser == null) {
+            throw new NotFoundException("User");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        if (!createdUser.isActive()) {
+            throw new ForbiddenException("this user account");
+        }
+
+        SecurityUserDetails userPrinciple = (SecurityUserDetails) authentication.getPrincipal();
+        return BaseResponse.build(buildLoginResponse(userPrinciple, createdUser), true);
+    }
+
+    @Override
+    public BaseResponse<String> logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            String token = extractTokenFromCurrentRequest();
+
+            if (token != null) {
+                jwtService.invalidateToken(token);
+
+                SecurityContextHolder.clearContext();
+
+                log.info("User successfully logged out");
+            } else {
+                log.warn("No token found in the request during logout");
+            }
+        }
+
+        return BaseResponse.build("Logged out successfully", true);
+    }
+
+    private String extractTokenFromCurrentRequest() {
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        HttpServletRequest request = attr.getRequest();
+
+        String headerAuth = request.getHeader("Authorization");
+        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+        return null;
     }
 
     @Override

@@ -20,6 +20,8 @@ public interface UserFacade {
 
     BaseResponse<LoginResponse> register(RegisterRequest request);
 
+    BaseResponse<String> logout();
+
     BaseResponse<UserProfileResponse> getCurrentUserProfile();
 
     BaseResponse<UserProfileResponse> updateCurrentUserProfile(UpdateUserProfileRequest request);

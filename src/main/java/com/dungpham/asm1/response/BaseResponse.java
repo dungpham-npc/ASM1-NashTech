@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BaseResponse<T> {
+public class BaseResponse<T> {      //TODO: Refactor to not use many response classes
     @JsonIgnore
     private boolean status;
 

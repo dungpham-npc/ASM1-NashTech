@@ -5,6 +5,7 @@ import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.request.CreateUserRequest;
 import com.dungpham.asm1.request.LoginRequest;
+import com.dungpham.asm1.request.RegisterRequest;
 import com.dungpham.asm1.request.UpdateUserProfileRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.LoginResponse;
@@ -41,23 +42,35 @@ public class UserController {
             tags = {TAG})
     @Logged
     public BaseResponse<LoginResponse> login(@Validated @RequestBody LoginRequest request) {
-        return this.userFacade.login(request);
+        return userFacade.login(request);
     }
 
-//    @PostMapping("/register")
-//    @ResponseStatus(HttpStatus.CREATED)
-//    @Operation(
-//            summary = "Register account",
-//            tags = {TAG})
-//    public BaseResponse<LoginResponse> register(@Validated @RequestBody LoginRequest request) {
-//        return this.userFacade.register(request);
-//    }
-//
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Logout account",
+            tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Logged
+    public BaseResponse<String> logout() {
+        return userFacade.logout();
+    }
+
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            summary = "Register account",
+            tags = {TAG})
+    public BaseResponse<LoginResponse> register(@Validated @RequestBody RegisterRequest request) {
+        return this.userFacade.register(request);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
             summary = "Create user for admin",
             tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
     @Logged
     public BaseResponse<UserDetailsResponse> createAccount(@Validated @RequestBody CreateUserRequest request) {
         return userFacade.createUser(request);
@@ -91,6 +104,7 @@ public class UserController {
     @Operation(
             summary = "Get all users for admin",
             tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
     @Logged
     public BaseResponse<Page<UserDetailsResponse>> getAllUsers(
             @RequestParam(required = false) String email,
@@ -114,6 +128,7 @@ public class UserController {
     @Operation(
             summary = "Deactivate user for admin",
             tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
     @Logged
     public BaseResponse<String> deactivateUser(@PathVariable Long id) {
         return userFacade.deactivateUser(id);

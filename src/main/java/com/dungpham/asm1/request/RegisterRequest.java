@@ -24,14 +24,6 @@ public class RegisterRequest {
     @Schema(description = "email", example = "email@email.com")
     private String email;
 
-    @NotNull(message = "First name is required")
-    @NotBlank(message = "First name cannot be blank")
-    private String firstName;
-
-    @NotNull(message = "Last name is required")
-    @NotBlank(message = "Last name cannot be blank")
-    private String lastName;
-
     @NotNull(message = "Password is required")
     @NotBlank(message = "Password cannot be blank")
     @Pattern(

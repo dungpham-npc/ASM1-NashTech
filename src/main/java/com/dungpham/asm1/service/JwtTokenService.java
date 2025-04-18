@@ -7,5 +7,7 @@ public interface JwtTokenService {
 
     Boolean validateToken(String token);
 
+    void invalidateToken(String token);
+
     String getEmailFromJwtToken(String token);
 }

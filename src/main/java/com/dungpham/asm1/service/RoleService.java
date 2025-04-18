@@ -4,4 +4,6 @@ import com.dungpham.asm1.entity.Role;
 
 public interface RoleService {
     Role getRoleById(Long id);
+
+    Role getRoleByName(String name);
 }
