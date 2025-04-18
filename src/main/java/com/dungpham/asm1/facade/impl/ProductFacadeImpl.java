@@ -1,13 +1,12 @@
 package com.dungpham.asm1.facade.impl;
 
-import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.entity.ProductImage;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.facade.ProductFacade;
-import com.dungpham.asm1.request.CreateOrUpdateProductRequest;
+import com.dungpham.asm1.request.ProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.CategoryResponse;
 import com.dungpham.asm1.response.ProductDetailsResponse;
@@ -71,7 +70,7 @@ public class ProductFacadeImpl implements ProductFacade {
     }
 
     @Override
-    public BaseResponse<ProductDetailsResponse> createProduct(CreateOrUpdateProductRequest request, List<MultipartFile> productImages) {
+    public BaseResponse<ProductDetailsResponse> createProduct(ProductRequest request, List<MultipartFile> productImages) {
         Product product = toProductEntity(request);
 
         // Add placeholder image(s) for testing
@@ -110,7 +109,7 @@ public class ProductFacadeImpl implements ProductFacade {
     }
 
     @Override
-    public BaseResponse<ProductDetailsResponse> updateProduct(CreateOrUpdateProductRequest request, Long id) {
+    public BaseResponse<ProductDetailsResponse> updateProduct(ProductRequest request, Long id) {
         if (categoryService.getCategory(request.getCategoryId()) == null) {
             throw new NotFoundException("Category");
         }
@@ -146,7 +145,7 @@ public class ProductFacadeImpl implements ProductFacade {
         return BaseResponse.build("Rating successful", true);
     }
 
-    private Product toProductEntity(CreateOrUpdateProductRequest request) {
+    private Product toProductEntity(ProductRequest request) {
         Product product = modelMapper.map(request, Product.class);
 
         Category category = categoryService.getCategory(request.getCategoryId());
