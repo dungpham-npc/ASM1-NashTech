@@ -6,7 +6,6 @@ import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.repository.CategoryRepository;
-import com.dungpham.asm1.response.CategoryListResponse;
 import com.dungpham.asm1.service.CategoryService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -21,8 +20,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Logged
-    public List<CategoryListResponse> getAllCategories() {
-        return categoryRepository.findCategoryWithProductCount();
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAllByIsActiveTrue();
     }
 
     @Override

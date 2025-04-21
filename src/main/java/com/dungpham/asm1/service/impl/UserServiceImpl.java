@@ -4,28 +4,17 @@ import com.dungpham.asm1.common.exception.ConflictException;
 import com.dungpham.asm1.common.exception.ForbiddenException;
 import com.dungpham.asm1.common.exception.InvalidArgumentException;
 import com.dungpham.asm1.common.exception.NotFoundException;
-import com.dungpham.asm1.entity.RecipientInformation;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
-import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.repository.UserRepository;
-import com.dungpham.asm1.request.UpdateRecipientInfoRequest;
 import com.dungpham.asm1.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

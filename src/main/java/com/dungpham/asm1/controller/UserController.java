@@ -33,7 +33,6 @@ public class UserController {
     private final String TAG = "Account APIs";
 
     private final UserFacade userFacade;
-    private final PasswordEncoder passwordEncoder;  //TODO: Remove this line on release
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -62,7 +61,7 @@ public class UserController {
             summary = "Register account",
             tags = {TAG})
     public BaseResponse<LoginResponse> register(@Validated @RequestBody RegisterRequest request) {
-        return this.userFacade.register(request);
+        return userFacade.register(request);
     }
 
     @PostMapping
@@ -133,10 +132,4 @@ public class UserController {
     public BaseResponse<String> deactivateUser(@PathVariable Long id) {
         return userFacade.deactivateUser(id);
     }
-
-    @GetMapping("/password")
-    @ResponseStatus(HttpStatus.OK)
-    public String getTestEncodedPassword(String password) {
-        return passwordEncoder.encode(password);
-    } //TODO: Remove this method on release
 }

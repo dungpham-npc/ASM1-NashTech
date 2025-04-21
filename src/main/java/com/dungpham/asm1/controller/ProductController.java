@@ -5,10 +5,10 @@ import com.dungpham.asm1.facade.ProductFacade;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.request.ProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
-import com.dungpham.asm1.response.ProductDetailsResponse;
 import com.dungpham.asm1.response.ProductResponse;
 import com.dungpham.asm1.specification.ProductSpecification;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -71,7 +71,7 @@ public class ProductController {
             summary = "Get a product's details by id",
             tags = {"Product APIs"})
     @Logged
-    public BaseResponse<ProductDetailsResponse> getProductById(@PathVariable Long id) {
+    public BaseResponse<ProductResponse> getProductById(@PathVariable Long id) {
         return productFacade.getProductDetails(id);
     }
 
@@ -81,7 +81,8 @@ public class ProductController {
             summary = "Create a new product",
             tags = {"Product APIs"})
     @Logged
-    public BaseResponse<ProductDetailsResponse> createProduct(
+    @SecurityRequirement(name = "Bearer Authentication")
+    public BaseResponse<ProductResponse> createProduct(
             @RequestPart(value = "productImages") List<MultipartFile> productImages,
             @RequestPart(value = "request") ProductRequest request) {
         return productFacade.createProduct(request, productImages);
@@ -93,7 +94,8 @@ public class ProductController {
             summary = "Update a product",
             tags = {"Product APIs"})
     @Logged
-    public BaseResponse<ProductDetailsResponse> updateProduct(
+    @SecurityRequirement(name = "Bearer Authentication")
+    public BaseResponse<ProductResponse> updateProduct(
             @PathVariable Long id,
             @RequestBody ProductRequest request) {
         return productFacade.updateProduct(request, id);
@@ -105,7 +107,8 @@ public class ProductController {
             summary = "Delete a product",
             tags = {"Product APIs"})
     @Logged
-    public BaseResponse<String> deleteProduct(@PathVariable Long id) {
+    @SecurityRequirement(name = "Bearer Authentication")
+    public BaseResponse<String> removeProduct(@PathVariable Long id) {
         productFacade.removeProduct(id);
         return BaseResponse.build("Product deleted successfully", true);
     }
@@ -116,6 +119,7 @@ public class ProductController {
             summary = "Rate a product",
             tags = {"Product APIs"})
     @Logged
+    @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<String> rateProduct(
             @PathVariable Long id,
             @RequestParam Integer rating) {

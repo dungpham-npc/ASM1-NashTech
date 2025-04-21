@@ -1,10 +1,7 @@
 package com.dungpham.asm1.facade.impl;
 
-import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.common.exception.*;
-import com.dungpham.asm1.common.util.Util;
-import com.dungpham.asm1.entity.RecipientInformation;
-import com.dungpham.asm1.entity.Role;
+import com.dungpham.asm1.common.mapper.UserMapper;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
@@ -18,7 +15,6 @@ import com.dungpham.asm1.service.impl.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -30,8 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -39,11 +33,12 @@ public class UserFacadeImpl implements UserFacade {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtTokenService jwtService;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
     private final RoleService roleService;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Override
+    @Logged
     public BaseResponse<LoginResponse> login(LoginRequest request) {
         Authentication authentication =
                 authenticationManager.authenticate(
@@ -62,8 +57,9 @@ public class UserFacadeImpl implements UserFacade {
 
 
     @Override
+    @Logged
     public BaseResponse<LoginResponse> register(RegisterRequest request) {
-        User user = modelMapper.map(request, User.class);
+        User user = userMapper.toEntity(request);
         user.setRole(roleService.getRoleByName("CUSTOMER"));
 
         User createdUser = userService.createUser(user);
@@ -84,6 +80,7 @@ public class UserFacadeImpl implements UserFacade {
     }
 
     @Override
+    @Logged
     public BaseResponse<String> logout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -116,11 +113,12 @@ public class UserFacadeImpl implements UserFacade {
     }
 
     @Override
+    @Logged
     public BaseResponse<UserProfileResponse> getCurrentUserProfile() {
         User user = userDetailsService.getCurrentUser()
-                .orElseThrow(() -> new UnauthorizedException("this user account"));
+                .orElseThrow(() -> new UnauthorizedException("this feature"));
 
-        return BaseResponse.build(toUserProfileResponse(user), true);
+        return BaseResponse.build(userMapper.toUserProfileResponse(user), true);
     }
 
     @Override
@@ -133,78 +131,49 @@ public class UserFacadeImpl implements UserFacade {
             throw new InvalidArgumentException("Password", "New password and confirmation do not match.");
         }
 
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getNewPassword());
+        userMapper.updateEntity(request, user);
         user.getRecipientInformation().clear();
         user.getRecipientInformation().addAll(request.getRecipientInfo()
                 .stream()
-                .map(recipientInfo -> {
-                    RecipientInformation recipientInformation = modelMapper.map(recipientInfo, RecipientInformation.class);
-                    recipientInformation.setUser(user);
-                    recipientInformation.setIsDefault(recipientInfo.getIsDefault() != null ?
-                            recipientInfo.getIsDefault() : false);
-                    return recipientInformation;
-                })
+                .map(userMapper::toEntity)
+                .peek(recipientInformation -> recipientInformation.setUser(user))
                 .toList());
 
-        return BaseResponse.build(toUserProfileResponse(userService.updateUserProfile(user)), true);
+        return BaseResponse.build(userMapper.toUserProfileResponse(userService.updateUserProfile(user)), true);
     }
 
     @Override
+    @Logged
     public BaseResponse<Page<UserDetailsResponse>> getAllUsers(Specification<User> spec, Pageable pageable) {
         Page<User> userPage = userService.getAllUsers(spec, pageable);
 
-        return BaseResponse.build(userPage.map(user -> {
-            UserDetailsResponse response = modelMapper.map(user, UserDetailsResponse.class);
-            response.setCreatedAt(Util.convertTimestampToLocalDateTime(user.getCreatedAt()));
-            response.setUpdatedAt(Util.convertTimestampToLocalDateTime(user.getUpdatedAt()));
-            response.setRole(user.getRole().getName());
-            return response;
-        }), true);
+        return BaseResponse.build(userPage.map(userMapper::toUserDetailsResponse), true);
     }
 
     @Override
+    @Logged
     public BaseResponse<UserDetailsResponse> createUser(CreateUserRequest request) {
-        User user = modelMapper.map(request, User.class);
+        User user = userMapper.toEntity(request);
         user.setRole(roleService.getRoleById(request.getRoleId()));
 
         User createdUser = userService.createUser(user);
         if (createdUser == null) {
             throw new NotFoundException("User");
         }
-        UserDetailsResponse response = modelMapper.map(user, UserDetailsResponse.class);
-        response.setCreatedAt(Util.convertTimestampToLocalDateTime(user.getCreatedAt()));
-        response.setUpdatedAt(Util.convertTimestampToLocalDateTime(user.getUpdatedAt()));
-        response.setRole(user.getRole().getName());
 
-        return BaseResponse.build(response, true);
+        return BaseResponse.build(userMapper.toUserDetailsResponse(createdUser), true);
     }
 
     @Override
+    @Logged
     public BaseResponse<String> deactivateUser(Long id) {
         userService.deactivateUser(id);
         return BaseResponse.build("User deactivated successfully", true);
     }
 
     private LoginResponse buildLoginResponse(SecurityUserDetails userDetails, User user) {
-        var accessToken = jwtService.generateToken(userDetails);
+        String accessToken = jwtService.generateToken(userDetails);
 
-        return LoginResponse.builder()
-                .email(user.getEmail())
-                .accessToken(accessToken)
-                .role(user.getRole().getName())
-                .build();
-    }
-
-    private UserProfileResponse toUserProfileResponse(User user) {
-        List<RecipientInfoResponse> recipientInfoList = user.getRecipientInformation()
-                .stream()
-                .map(recipientInformation -> modelMapper.map(recipientInformation, RecipientInfoResponse.class))
-                .toList();
-
-        return UserProfileResponse.builder()
-                .email(user.getEmail())
-                .recipientInfo(recipientInfoList)
-                .build();
+        return userMapper.toLoginResponseWithToken(user, LoginResponse.builder().build(), accessToken);
     }
 }

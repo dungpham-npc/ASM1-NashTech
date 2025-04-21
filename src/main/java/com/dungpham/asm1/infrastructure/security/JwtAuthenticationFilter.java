@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
@@ -25,23 +27,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final List<String> PUBLIC_URL =
-            List.of(
-                    // Authentication
-                    "/api/v1/users/login",
-                    "/api/v1/users/password", // TODO: Remove this in production as noted in your controller
-
-                    // Public product browsing
-                    "/api/v1/products",
-                    "/api/v1/products/featured",
-                    "/api/v1/products/{id}",
-
-                    // Public category browsing
-                    "/api/v1/categories"
-            );
+    private final List<String> PUBLIC_URL = Arrays.asList(SecurityConfig.PUBLIC_LIST);
 
     private final JwtTokenService jwtTokenServices;
     private final UserDetailsServiceImpl userService;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -53,7 +43,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = getTokenFromHeader(request);
         String requestURI = request.getRequestURI();
 
-        if (PUBLIC_URL.stream().anyMatch(requestURI::contains)) {
+        boolean isPublic = PUBLIC_URL.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
+        if (isPublic) {
+            log.info("Skipping authentication for public URL: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
@@ -77,6 +69,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authenticationToken.setDetails(details);
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                log.info("Authentication set for user: {}", email);
+            } else {
+                log.warn("Invalid or missing token for: {}", requestURI);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
