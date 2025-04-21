@@ -27,13 +27,15 @@ import java.util.List;
 @RequestMapping("/api/${api.version}/products")
 @RequiredArgsConstructor
 public class ProductController {
+    private final String TAG = "Product APIs";
+
     private final ProductFacade productFacade;
 
     @GetMapping("/featured")
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Get featured products",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     public BaseResponse<List<ProductResponse>> getFeaturedProducts() {
         return productFacade.getFeaturedProducts();
@@ -43,7 +45,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Get all products",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     public BaseResponse<Page<ProductResponse>> getAllProducts(
             @RequestParam(required = false) String productName,
@@ -69,7 +71,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Get a product's details by id",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     public BaseResponse<ProductResponse> getProductById(@PathVariable Long id) {
         return productFacade.getProductDetails(id);
@@ -79,7 +81,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
             summary = "Create a new product",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<ProductResponse> createProduct(
@@ -92,7 +94,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Update a product",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<ProductResponse> updateProduct(
@@ -105,7 +107,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Delete a product",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<String> removeProduct(@PathVariable Long id) {
@@ -117,7 +119,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Rate a product",
-            tags = {"Product APIs"})
+            tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<String> rateProduct(

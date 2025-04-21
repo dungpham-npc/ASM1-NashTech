@@ -26,14 +26,13 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userService;
     private final JwtTokenService jwtTokenService;
 
-    private final String[] WHITE_LIST = {
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html", "/api/v1/**"
+    public static final String[] WHITE_LIST = {
+            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
     };
 
-    private final String[] PUBLIC_LIST = {
+    public static final String[] PUBLIC_LIST = {
             // Authentication
             "/api/v1/users/login",
-            "/api/v1/users/password", // TODO: Remove this in production as noted in your controller
 
             // Public product browsing
             "/api/v1/products",
