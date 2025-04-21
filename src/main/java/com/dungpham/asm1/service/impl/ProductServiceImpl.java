@@ -1,6 +1,5 @@
 package com.dungpham.asm1.service.impl;
 
-import com.dungpham.asm1.common.exception.ConflictException;
 import com.dungpham.asm1.common.exception.InvalidArgumentException;
 import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Product;
@@ -21,12 +20,12 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
+
     @Override
     @Transactional
     @Logged
     public Product createProduct(Product product) {
         validateProduct(product, false);
-
         return productRepository.save(product);
     }
 
@@ -35,31 +34,25 @@ public class ProductServiceImpl implements ProductService {
     @Logged
     public Product updateProduct(Product product) {
         validateProduct(product, true);
-
         return productRepository.save(product);
     }
 
     private void validateProduct(Product product, boolean isUpdate) {
-        if (productRepository.findById(product.getId()).isPresent() && !isUpdate) {
-            throw new ConflictException("Product");
+        if (isUpdate && product.getId() == null) {
+            throw new NotFoundException("Product ID must not be null for update");
         }
-
-        if (productRepository.findById(product.getId()).isEmpty() && isUpdate) {
-            throw new NotFoundException("Product");
+        if (!isUpdate && product.getId() != null) {
+            throw new InvalidArgumentException("id", "Product ID must be null for creation");
         }
-
         if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidArgumentException("price", "Price must be greater than 0");
         }
-
         if (product.getName() == null || product.getName().isEmpty()) {
             throw new InvalidArgumentException("name", "Product name cannot be empty");
         }
-
         if (product.getDescription() == null || product.getDescription().isEmpty()) {
             throw new InvalidArgumentException("description", "Product description cannot be empty");
         }
-
         if (product.getCategory() == null || product.getCategory().getId() == null) {
             throw new NotFoundException("Category");
         }
@@ -72,7 +65,6 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Product"));
         product.setActive(false);
-
         productRepository.save(product);
     }
 

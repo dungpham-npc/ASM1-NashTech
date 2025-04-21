@@ -97,6 +97,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     @Logged
     public void deactivateUser(Long id) {
         User user = userRepository

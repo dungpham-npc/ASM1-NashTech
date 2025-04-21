@@ -11,10 +11,9 @@ import com.dungpham.asm1.facade.ProductFacade;
 import com.dungpham.asm1.request.ProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.ProductResponse;
-import com.dungpham.asm1.service.CategoryService;
-import com.dungpham.asm1.service.ProductRatingService;
-import com.dungpham.asm1.service.ProductService;
+import com.dungpham.asm1.service.*;
 import com.dungpham.asm1.service.impl.UserDetailsServiceImpl;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,110 +23,74 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ProductFacadeImpl implements ProductFacade {
+    private static final String DEFAULT_THUMBNAIL = "null.jpg";
+    private static final int RATING_SCALE = 2;
+
     private final ProductService productService;
     private final ProductMapper productMapper;
     private final CategoryService categoryService;
     private final ProductRatingService productRatingService;
     private final UserDetailsServiceImpl userService;
-
+    private final ProductImageService productImageService;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public BaseResponse<List<ProductResponse>> getFeaturedProducts() {
-        return BaseResponse.build(productService.getFeaturedProducts()
-                .stream()
-                .map(productMapper::toProductResponse)
-                .toList(), true);
+        List<ProductResponse> responses = productService.getFeaturedProducts().stream()
+                .map(this::mapToProductResponseWithThumbnail)
+                .toList();
+        return BaseResponse.build(responses, true);
     }
 
     @Override
     public BaseResponse<Page<ProductResponse>> getAllProducts(Specification<Product> spec, Pageable pageable) {
-        Page<Product> productPage = productService.getAllProducts(spec, pageable);
-
-        return BaseResponse.build(productPage.map(productMapper::toProductResponse), true);
+        Page<ProductResponse> responsePage = productService.getAllProducts(spec, pageable)
+                .map(this::mapToProductResponseWithThumbnail);
+        return BaseResponse.build(responsePage, true);
     }
 
     @Override
     public BaseResponse<ProductResponse> getProductDetails(Long id) {
         Product product = productService.getProductById(id);
         ProductResponse response = productMapper.toProductDetailsResponse(product);
-        BigDecimal averageRating = productRatingService.getAverageRatingOfProduct(product);
-
-        response.setAverageRating(averageRating.setScale(2, RoundingMode.HALF_UP));
-
+        response.setAverageRating(getScaledAverageRating(product));
+        response.setImageUrls(getImageUrls(product.getImages()));
+        response.setThumbnailUrl(null);
         return BaseResponse.build(response, true);
     }
 
     @Override
+    @Transactional
     public BaseResponse<ProductResponse> createProduct(ProductRequest request, List<MultipartFile> productImages) {
         Product product = productMapper.toEntity(request);
-        Category category = categoryService.getCategory(request.getCategoryId());
-
-        if (category == null) {
-            throw new NotFoundException("Category");
-        }
-        product.setCategory(category);
-
+        product.setCategory(getCategoryOrThrow(request.getCategoryId()));
         if (productImages != null && !productImages.isEmpty()) {
-            List<ProductImage> images = new ArrayList<>();
-            boolean isFirst = true;
-
-            for (MultipartFile file : productImages) {
-                String tempImageKey = "temp_" + (file.getOriginalFilename() != null ?
-                        file.getOriginalFilename() :
-                        "image_" + System.currentTimeMillis());
-
-                ProductImage image = ProductImage.builder()
-                        .imageKey(tempImageKey)
-                        .isThumbnail(isFirst)
-                        .product(product)
-                        .build();
-
-                images.add(image);
-                isFirst = false;
-            }
-
-            product.setImages(images);
-        } else {
-            ProductImage placeholderImage = ProductImage.builder()
-                    .imageKey("placeholder_image")
-                    .isThumbnail(true)
-                    .product(product)
-                    .build();
-
-            product.setImages(Collections.singletonList(placeholderImage));
+            product.setImages(productImageService.saveImages(productImages, product));
         }
+        Product savedProduct = productService.createProduct(product);
+        ProductResponse response = productMapper.toProductDetailsResponse(savedProduct);
 
-        return BaseResponse.build(productMapper.toProductDetailsResponse(productService.createProduct(product)), true);
+        response.setAverageRating(BigDecimal.ZERO);
+        response.setImageUrls(getImageUrls(savedProduct.getImages()));
+        return BaseResponse.build(response, true);
     }
 
     @Override
     public BaseResponse<ProductResponse> updateProduct(ProductRequest request, Long id) {
-        Category category = categoryService.getCategory(request.getCategoryId());
-
-        if (category == null) {
-            throw new NotFoundException("Category");
-        }
-
         Product product = productService.getProductById(id);
-
         productMapper.updateEntity(request, product);
-        product.setCategory(category);
+        product.setCategory(getCategoryOrThrow(request.getCategoryId()));
+        Product updatedProduct = productService.updateProduct(product);
 
-        Product updated = productService.updateProduct(product);
-
-        ProductResponse response = productMapper.toProductDetailsResponse(updated);
-        BigDecimal averageRating = productRatingService.getAverageRatingOfProduct(updated);
-        response.setAverageRating(averageRating.setScale(2, RoundingMode.HALF_UP));
-
+        ProductResponse response = productMapper.toProductDetailsResponse(updatedProduct);
+        response.setAverageRating(getScaledAverageRating(updatedProduct));
+        response.setImageUrls(getImageUrls(updatedProduct.getImages()));
         return BaseResponse.build(response, true);
-
     }
 
     @Override
@@ -141,9 +104,50 @@ public class ProductFacadeImpl implements ProductFacade {
         Product product = productService.getProductById(productId);
         User user = userService.getCurrentUser()
                 .orElseThrow(() -> new UnauthorizedException("this feature"));
-
-
         productRatingService.rateProduct(product, user, rating);
         return BaseResponse.build("Rating successful", true);
+    }
+
+    @Override
+    public BaseResponse<String> uploadProductImages(Long productId, List<MultipartFile> files) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public BaseResponse<String> deleteProductImage(String imageUrl) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    private ProductResponse mapToProductResponseWithThumbnail(Product product) {
+        ProductResponse response = productMapper.toProductResponse(product);
+        ProductImage thumbnail = product.getImages().stream()
+                .filter(ProductImage::isThumbnail)
+                .findFirst()
+                .orElse(null);
+        response.setThumbnailUrl(thumbnail != null
+                ? cloudinaryService.getImageUrl(thumbnail.getImageKey())
+                : DEFAULT_THUMBNAIL);
+        response.setImageUrls(null);
+        return response;
+    }
+
+    private Category getCategoryOrThrow(Long categoryId) {
+        Category category = categoryService.getCategory(categoryId);
+        if (category == null) {
+            throw new NotFoundException("Category");
+        }
+        return category;
+    }
+
+    private BigDecimal getScaledAverageRating(Product product) {
+        return productRatingService.getAverageRatingOfProduct(product)
+                .setScale(RATING_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private List<String> getImageUrls(List<ProductImage> images) {
+        return images.stream()
+                .map(image -> cloudinaryService.getImageUrl(image.getImageKey()))
+                .map(url -> url != null ? url : "")
+                .toList();
     }
 }

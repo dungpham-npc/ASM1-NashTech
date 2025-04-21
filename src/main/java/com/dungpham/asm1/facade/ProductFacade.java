@@ -25,4 +25,8 @@ public interface ProductFacade {
     BaseResponse<String> removeProduct(Long id);
 
     BaseResponse<String> rateProduct(Long productId, Integer rating);
+
+    BaseResponse<String> uploadProductImages(Long productId, List<MultipartFile> files);
+
+    BaseResponse<String> deleteProductImage(String imageUrl);
 }
