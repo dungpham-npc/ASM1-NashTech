@@ -2,8 +2,7 @@ package com.dungpham.asm1.common.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -11,6 +10,7 @@ import java.util.regex.Pattern;
 
 @Getter
 @RequiredArgsConstructor
+@Slf4j
 public enum ErrorCode {
     NOT_FOUND("404", "%s not found"),
     BAD_REQUEST("400", "%s is invalid"),
@@ -25,29 +25,28 @@ public enum ErrorCode {
 
     private final String code;
     private final String messageTemplate;
-    private static final Logger logger = LoggerFactory.getLogger(ErrorCode.class);
     public String formatMessage(Object... args) {
-        logger.info("formatMessage called: code={}, template={}, args={}",
+        log.info("formatMessage called: code={}, template={}, args={}",
                 code, messageTemplate, Arrays.toString(args));
 
         if (args == null || args.length == 0) {
-            logger.warn("No args provided for template: {}", messageTemplate);
+            log.warn("No args provided for template: {}", messageTemplate);
             return messageTemplate;
         }
         
         int expectedArgs = countPlaceholders(messageTemplate);
         if (args.length < expectedArgs) {
-            logger.error("Insufficient arguments: expected={}, provided={}, template={}, args={}",
+            log.error("Insufficient arguments: expected={}, provided={}, template={}, args={}",
                     expectedArgs, args.length, messageTemplate, Arrays.toString(args));
             return String.valueOf(args[0]);
         }
 
         try {
             String result = String.format(messageTemplate, args);
-            logger.info("formatMessage success: result={}", result);
+            log.info("formatMessage success: result={}", result);
             return result;
         } catch (Exception e) {
-            logger.error("formatMessage failed: template={}, args={}, error={}",
+            log.error("formatMessage failed: template={}, args={}, error={}",
                     messageTemplate, Arrays.toString(args), e.getMessage(), e);
             e.printStackTrace(System.err);
             return String.valueOf(args[0]);

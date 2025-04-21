@@ -7,6 +7,7 @@ import com.dungpham.asm1.infrastructure.security.SecurityUserDetails;
 import com.dungpham.asm1.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -23,8 +24,8 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserDetailsServiceImpl implements UserDetailsService {
-    private static final Logger log = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
     private final UserRepository userRepository;
     @Override
     @Logged
@@ -34,8 +35,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .findByEmail(mail)
                 .orElseThrow(() -> new NotFoundException("User"));
 
-        List<GrantedAuthority> authorityList =
-                List.of(new SimpleGrantedAuthority(user.getRole().toString()));
+        List<GrantedAuthority> authorityList = List.of(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().toUpperCase())
+        );
+
+        authorityList.forEach(authority -> log.info("Authority: {}", authority));
 
         return SecurityUserDetails.build(user, authorityList);
     }

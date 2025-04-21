@@ -6,6 +6,7 @@ import com.dungpham.asm1.response.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -75,6 +76,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleGeneric(Exception ex) {
         return buildSimpleError("INTERNAL_ERROR", "Unexpected error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleAccessDenied(AccessDeniedException ex) {
+        return buildSimpleError(
+                "ACCESS_DENIED",
+                "You don't have permission to access this resource",
+                HttpStatus.FORBIDDEN);
     }
 
 

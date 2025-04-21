@@ -106,7 +106,16 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userDetail.getId());
         claims.put("mail", userDetail.getEmail());
-        claims.put("roles", roles.getFirst());
+
+        log.info("User roles: {}", roles);
+
+        // Make sure roles have ROLE_ prefix
+        String role = roles.isEmpty() ? "ROLE_CUSTOMER" : roles.getFirst();
+        if (!role.startsWith("ROLE_")) {
+            role = "ROLE_" + role;
+        }
+        claims.put("roles", role);
+
         return claims;
     }
 }

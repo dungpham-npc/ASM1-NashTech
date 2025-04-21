@@ -1,10 +1,18 @@
 package com.dungpham.asm1.infrastructure.security;
 
+import com.dungpham.asm1.common.enums.ErrorCode;
+import com.dungpham.asm1.common.exception.ForbiddenException;
+import com.dungpham.asm1.common.exception.UnauthorizedException;
+import com.dungpham.asm1.response.BaseResponse;
+import com.dungpham.asm1.response.ExceptionResponse;
 import com.dungpham.asm1.service.JwtTokenService;
 import com.dungpham.asm1.service.impl.UserDetailsServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -33,6 +41,7 @@ public class SecurityConfig {
     public static final String[] PUBLIC_LIST = {
             // Authentication
             "/api/v1/users/login",
+            "/api/v1/users/register",
 
             // Public product browsing
             "/api/v1/products",
@@ -40,7 +49,34 @@ public class SecurityConfig {
             "/api/v1/products/{id}",
 
             // Public category browsing
-            "/api/v1/categories"
+            "/api/v1/categories",
+            "/api/v1/categories/{id}"
+    };
+
+    public static final String[] CUSTOMER_LIST = {
+            // User profile management
+            "/api/v1/users/current",
+            "/api/v1/users/current/**",
+            "/api/v1/users/logout",
+
+            // Product interactions
+            "/api/v1/products/{id}/rate"
+    };
+
+    public static final String[] ADMIN_LIST = {
+            // User management
+            "/api/v1/users",
+            "/api/v1/users/{id}",
+
+            // Product management
+            "/api/v1/products/POST",
+            "/api/v1/products/{id}/PUT",
+            "/api/v1/products/{id}/DELETE",
+
+            // Category management
+            "/api/v1/categories/POST",
+            "/api/v1/categories/{id}/PUT",
+            "/api/v1/categories/{id}/DELETE"
     };
 
     @Bean
@@ -74,15 +110,46 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+                            String uri = request.getRequestURI();
+                            ForbiddenException ex = new ForbiddenException(uri);
+
+                            BaseResponse<Object> errorResponse = BaseResponse.builder()
+                                    .status(false)
+                                    .code(ex.getErrorCodeString())
+                                    .message(ex.getFormattedMessage())
+                                    .data(null)
+                                    .build();
+
+                            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+                        }))
                 .authorizeHttpRequests(
-                        request ->
-                                request
-                                        .requestMatchers(WHITE_LIST)
-                                        .permitAll()
-                                        .requestMatchers(PUBLIC_LIST)
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated());
+                        request -> request
+                                .requestMatchers(WHITE_LIST).permitAll()
+                                .requestMatchers(PUBLIC_LIST).permitAll()
+
+                                // Explicitly allow access to current user endpoint for CUSTOMER
+                                .requestMatchers("/api/v1/users/current").hasAnyRole("CUSTOMER", "ADMIN")
+                                .requestMatchers("/api/v1/users/current/**").hasAnyRole("CUSTOMER", "ADMIN")
+
+                                // Admin-only user management
+                                .requestMatchers("/api/v1/users").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/users/{id}").hasRole("ADMIN")
+
+                                // Method-specific authorization
+                                .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/products/{id}").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/{id}").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/v1/categories").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/categories/{id}").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{id}").hasRole("ADMIN")
+
+                                .anyRequest().authenticated());
+
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();

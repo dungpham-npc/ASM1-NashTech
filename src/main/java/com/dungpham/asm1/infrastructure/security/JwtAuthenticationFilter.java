@@ -31,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenServices;
     private final UserDetailsServiceImpl userService;
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -42,9 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = getTokenFromHeader(request);
         String requestURI = request.getRequestURI();
+        String method = request.getMethod();
 
-        boolean isPublic = PUBLIC_URL.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
-        if (isPublic) {
+        boolean isPublicEndpoint = isPublicEndpoint(requestURI, method);
+        if (isPublicEndpoint) {
             log.info("Skipping authentication for public URL: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
@@ -62,6 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtTokenServices.getEmailFromJwtToken(token);
                 var userDetails = userService.loadUserByUsername(email);
 
+                log.info("User authorities: {}", userDetails.getAuthorities());
+
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
@@ -70,21 +72,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 log.info("Authentication set for user: {}", email);
-            } else {
+            } else if(token != null) {
                 log.warn("Invalid or missing token for: {}", requestURI);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
+            log.error("Token validation error: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
+
+    private boolean isPublicEndpoint(String requestUri, String method) {
+        // Check whitelist endpoints (Swagger, etc.)
+        for (String pattern : SecurityConfig.WHITE_LIST) {
+            if (matchesUrl(pattern, requestUri)) {
+                return true;
+            }
+        }
+
+        // Check regular public endpoints
+        for (String pattern : SecurityConfig.PUBLIC_LIST) {
+            if (matchesUrl(pattern, requestUri)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean matchesUrl(String pattern, String requestUri) {
+        // Convert Spring's ant pattern to regex pattern
+        String regexPattern = pattern
+                .replace("/**", "(/.*)?")
+                .replace("/*", "(/[^/]*)?")
+                .replace("{id}", "[^/]+");
+        return requestUri.matches(regexPattern);
     }
 
 
     private String getTokenFromHeader(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
-        if (headerAuth != null) return headerAuth.substring(7);
+        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
         return null;
     }
 }
