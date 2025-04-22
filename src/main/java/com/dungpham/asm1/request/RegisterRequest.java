@@ -30,6 +30,9 @@ public class RegisterRequest {
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
             message =
                     "The password must be at least 8 characters, including letters, numbers, and special characters.")
-    @Schema(description = "password", example = "NguyenThanhSr4@")
+    @Schema(description = "password", example = "Password123!")
     private String password;
+
+    @Schema(description = "confirm password", example = "Password123!")
+    private String confirmPassword;
 }

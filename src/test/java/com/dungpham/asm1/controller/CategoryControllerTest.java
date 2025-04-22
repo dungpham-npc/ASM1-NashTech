@@ -251,6 +251,50 @@ public class CategoryControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void createCategory_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        // Arrange
+        CategoryRequest request = CategoryRequest.builder()
+                .name("Electronics")
+                .description("Electronic devices")
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateCategory_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        // Arrange
+        Long categoryId = 1L;
+        CategoryRequest request = CategoryRequest.builder()
+                .name("Updated Electronics")
+                .description("Updated electronic devices")
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(put("/api/v1/categories/{id}", categoryId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteCategory_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        // Arrange
+        Long categoryId = 1L;
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/v1/categories/{id}", categoryId)
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
     private void setId(Category category, Long id) throws Exception {
         Field idField = category.getClass().getSuperclass().getDeclaredField("id");
         idField.setAccessible(true);

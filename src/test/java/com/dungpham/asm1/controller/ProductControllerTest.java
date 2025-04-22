@@ -275,6 +275,157 @@ public class ProductControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void createProduct_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        ProductRequest request = ProductRequest.builder()
+                .name("New Product")
+                .description("Product Description")
+                .price(BigDecimal.valueOf(199.99))
+                .categoryId(1L)
+                .build();
+
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request",
+                "",
+                "application/json",
+                objectMapper.writeValueAsBytes(request));
+
+        MockMultipartFile imagePart = new MockMultipartFile(
+                "productImages",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/products")
+                        .file(imagePart)
+                        .file(requestPart)
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateProduct_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        ProductRequest request = ProductRequest.builder()
+                .name("Updated Product")
+                .description("Updated Description")
+                .price(BigDecimal.valueOf(299.99))
+                .categoryId(1L)
+                .build();
+
+        mockMvc.perform(put("/api/v1/products/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteProduct_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        mockMvc.perform(delete("/api/v1/products/1")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rateProduct_WithoutLogin_ReturnsUnauthorized() throws Exception {
+        mockMvc.perform(post("/api/v1/products/1/rate")
+                        .param("rating", "5")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAllProducts_WithFilterParameters_CallsFacadeWithCorrectSpecification() throws Exception {
+        Page<ProductResponse> productPage = new PageImpl<>(
+                List.of(createProductResponse(1L, "iPhone", BigDecimal.valueOf(999.99))),
+                Pageable.ofSize(10),
+                1
+        );
+
+        when(productFacade.getAllProducts(any(), any()))
+                .thenReturn(BaseResponse.build(productPage, true));
+
+        mockMvc.perform(get("/api/v1/products")
+                        .param("productName", "Phone")
+                        .param("minPrice", "500")
+                        .param("maxPrice", "1500")
+                        .param("categoryId", "2"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Specification<Product>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+        verify(productFacade).getAllProducts(specCaptor.capture(), any());
+    }
+
+    @Test
+    void getAllProducts_WithDefaultPagination_UsesCorrectDefaults() throws Exception {
+        Page<ProductResponse> productPage = new PageImpl<>(
+                List.of(createProductResponse(1L, "iPhone", BigDecimal.valueOf(999.99))),
+                Pageable.ofSize(10),
+                1
+        );
+
+        when(productFacade.getAllProducts(any(), any()))
+                .thenReturn(BaseResponse.build(productPage, true));
+
+        mockMvc.perform(get("/api/v1/products"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(productFacade).getAllProducts(any(), pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(0, pageable.getPageNumber());
+        assertEquals(10, pageable.getPageSize());
+        assertTrue(pageable.getSort().getOrderFor("id").getDirection().isAscending());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createProduct_WithInvalidRequest_ReturnsBadRequest() throws Exception {
+        ProductRequest request = ProductRequest.builder()
+                .description("Product Description")
+                .price(BigDecimal.valueOf(-199.99))  // Invalid price
+                .build();
+
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request",
+                "",
+                "application/json",
+                objectMapper.writeValueAsBytes(request));
+
+        MockMultipartFile imagePart = new MockMultipartFile(
+                "productImages",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/products")
+                        .file(imagePart)
+                        .file(requestPart)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateProduct_WithInvalidRequest_ReturnsBadRequest() throws Exception {
+        // Arrange
+        Long productId = 1L;
+        ProductRequest request = ProductRequest.builder()
+                .name("")  // Invalid: empty name
+                .description("Updated Description")
+                .price(BigDecimal.valueOf(-50.00))  // Invalid: negative price
+                .categoryId(1L)
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(put("/api/v1/products/{id}", productId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
     private ProductResponse createProductResponse(Long id, String name, BigDecimal price) {
         ProductResponse response = new ProductResponse();
         response.setId(id);

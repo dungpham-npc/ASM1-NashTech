@@ -15,6 +15,7 @@ import com.dungpham.asm1.specification.ProductSpecification;
 import com.dungpham.asm1.specification.UserSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/${api.version}/users")
 @RequiredArgsConstructor
+@Validated
 public class UserController {
     private final String TAG = "Account APIs";
 
@@ -40,7 +46,7 @@ public class UserController {
             summary = "Login account",
             tags = {TAG})
     @Logged
-    public BaseResponse<LoginResponse> login(@Validated @RequestBody LoginRequest request) {
+    public BaseResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return userFacade.login(request);
     }
 
@@ -60,7 +66,7 @@ public class UserController {
     @Operation(
             summary = "Register account",
             tags = {TAG})
-    public BaseResponse<LoginResponse> register(@Validated @RequestBody RegisterRequest request) {
+    public BaseResponse<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
         return userFacade.register(request);
     }
 
@@ -71,7 +77,7 @@ public class UserController {
             tags = {TAG})
     @SecurityRequirement(name = "Bearer Authentication")
     @Logged
-    public BaseResponse<UserDetailsResponse> createAccount(@Validated @RequestBody CreateUserRequest request) {
+    public BaseResponse<UserDetailsResponse> createAccount(@Valid @RequestBody CreateUserRequest request) {
         return userFacade.createUser(request);
     }
 
@@ -94,7 +100,7 @@ public class UserController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Logged
     public BaseResponse<UserProfileResponse> updateCurrentUserProfile(
-            @Validated @RequestBody UpdateUserProfileRequest request) {
+            @Valid @RequestBody UpdateUserProfileRequest request) {
         return userFacade.updateCurrentUserProfile(request);
     }
 

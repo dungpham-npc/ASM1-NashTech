@@ -32,11 +32,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -269,5 +267,160 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.code", is("200")))
                 .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data", is("User deactivated successfully")));
+    }
+
+    @Test
+    void login_InvalidCredentials_ReturnsBadRequest() throws Exception {
+        // Arrange
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("invalid") // Invalid email format
+                .password("short") // Too short password
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_InvalidUserData_ReturnsBadRequest() throws Exception {
+        // Arrange
+        RegisterRequest registerRequest = RegisterRequest.builder()
+                .email("invalid-email")
+                .password("123") // Too short
+                .confirmPassword("456") // Doesn't match
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createAccount_InvalidData_ReturnsBadRequest() throws Exception {
+        // Arrange
+        CreateUserRequest request = CreateUserRequest.builder()
+                .email("") // Empty email
+                .password("short") // Too short password
+                .roleId(null) // Missing role
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void updateCurrentUserProfile_InvalidData_ReturnsBadRequest() throws Exception {
+        // Arrange
+        UpdateUserProfileRequest request = UpdateUserProfileRequest.builder()
+                .email("invalid-email-format")
+                .newPassword("123") // Too short
+                .confirmNewPassword("456") // Doesn't match
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(put("/api/v1/users/current")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getCurrentUserProfile_NotLoggedIn_ReturnsUnauthorized() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/users/current")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateCurrentUserProfile_NotLoggedIn_ReturnsUnauthorized() throws Exception {
+        // Arrange
+        UpdateUserProfileRequest request = UpdateUserProfileRequest.builder()
+                .email("test@example.com")
+                .newPassword("Password123!")
+                .confirmNewPassword("Password123!")
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(put("/api/v1/users/current")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAllUsers_NotLoggedIn_ReturnsUnauthorized() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/users")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deactivateUser_NotLoggedIn_ReturnsUnauthorized() throws Exception {
+        // Act & Assert
+        mockMvc.perform(delete("/api/v1/users/1")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void createAccount_CustomerRole_ReturnsForbidden() throws Exception {
+        // Arrange
+        CreateUserRequest request = CreateUserRequest.builder()
+                .email("test@example.com")
+                .password("Password123!")
+                .roleId(1L)
+                .build();
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void getAllUsers_CustomerRole_ReturnsForbidden() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/users")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void deactivateUser_CustomerRole_ReturnsForbidden() throws Exception {
+        // Act & Assert
+        mockMvc.perform(delete("/api/v1/users/1")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser
+    void logout_WithoutCustomerRole_ReturnsForbidden() throws Exception {
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/users/logout")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

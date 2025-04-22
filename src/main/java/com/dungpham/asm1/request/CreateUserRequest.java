@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,7 +33,7 @@ public class CreateUserRequest {
     private String password;
 
     @NotNull(message = "Role ID is required")
-    @NotBlank(message = "Role ID cannot be blank")
+    @Positive(message = "Role ID must be a positive number")
     @Schema(description = "roleId 2 (CUSTOMER)", example = "2")
     private Long roleId;
 }

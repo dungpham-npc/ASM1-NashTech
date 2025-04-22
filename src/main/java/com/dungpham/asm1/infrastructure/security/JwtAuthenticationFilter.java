@@ -7,30 +7,43 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final List<String> PUBLIC_URL = Arrays.asList(SecurityConfig.PUBLIC_LIST);
+    private final List<PublicEndpoint> PUBLIC_ENDPOINTS = List.of(
+//            new PublicEndpoint("GET", "/api/v1/products"),
+//            new PublicEndpoint("GET", "/api/v1/products/featured"),
+//            new PublicEndpoint("GET", "/api/v1/products/*"),
+//            new PublicEndpoint("GET", "/api/v1/categories"),
+//            new PublicEndpoint("GET", "/api/v1/categories/*"),
+            new PublicEndpoint("POST", "/api/v1/users/login"),
+            new PublicEndpoint("POST", "/api/v1/users/register"),
+            new PublicEndpoint(null, "/error") // Allow all methods
+    );
+
+    private final List<String> WHITE_LIST = Arrays.asList(SecurityConfig.WHITE_LIST);
 
     private final JwtTokenService jwtTokenServices;
     private final UserDetailsServiceImpl userService;
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -43,8 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
 
-        boolean isPublicEndpoint = isPublicEndpoint(requestURI, method);
-        if (isPublicEndpoint) {
+        if (isPublicEndpoint(method, requestURI)) {
             log.info("Skipping authentication for public URL: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
@@ -62,55 +74,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtTokenServices.getEmailFromJwtToken(token);
                 var userDetails = userService.loadUserByUsername(email);
 
-                log.info("User authorities: {}", userDetails.getAuthorities());
-
                 UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
 
-                WebAuthenticationDetails details = new WebAuthenticationDetailsSource().buildDetails(request);
-                authenticationToken.setDetails(details);
+                authenticationToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 log.info("Authentication set for user: {}", email);
-            } else if(token != null) {
-                log.warn("Invalid or missing token for: {}", requestURI);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            } else if (token != null) {
+                throw new InvalidTokenException();
             }
+
             filterChain.doFilter(request, response);
-        } catch (InvalidTokenException e) {
-            log.error("Token validation error: {}", e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        } catch (InvalidTokenException ex) {
+            log.error("Token validation failed: {}", ex.getMessage());
+            SecurityContextHolder.clearContext();
+            throw ex; // Let Spring Security handle it with CustomAuthenticationEntryPoint
         }
     }
 
-    private boolean isPublicEndpoint(String requestUri, String method) {
-        // Check whitelist endpoints (Swagger, etc.)
-        for (String pattern : SecurityConfig.WHITE_LIST) {
-            if (matchesUrl(pattern, requestUri)) {
-                return true;
-            }
-        }
-
-        // Check regular public endpoints
-        for (String pattern : SecurityConfig.PUBLIC_LIST) {
-            if (matchesUrl(pattern, requestUri)) {
-                return true;
-            }
-        }
-
-        return false;
+    private boolean isPublicEndpoint(String method, String uri) {
+        return PUBLIC_ENDPOINTS.stream().anyMatch(endpoint ->
+                (endpoint.method() == null || endpoint.method().equalsIgnoreCase(method))
+                        && pathMatcher.match(endpoint.pathPattern(), uri));
     }
 
-    private boolean matchesUrl(String pattern, String requestUri) {
-        // Convert Spring's ant pattern to regex pattern
-        String regexPattern = pattern
-                .replace("/**", "(/.*)?")
-                .replace("/*", "(/[^/]*)?")
-                .replace("{id}", "[^/]+");
-        return requestUri.matches(regexPattern);
-    }
 
+    private boolean matchesAny(List<String> patterns, String requestUri) {
+        return patterns.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestUri));
+    }
 
     private String getTokenFromHeader(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
+@Slf4j
 public class SecurityUserDetails implements UserDetails {
     private Long id;
     private String email;
@@ -43,8 +45,10 @@ public class SecurityUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.authorities;
+        log.info("Returning authorities from SecurityUserDetails: {}", authorities);
+        return this.authorities == null ? List.of() : this.authorities;
     }
+
 
     @Override
     public String getPassword() {

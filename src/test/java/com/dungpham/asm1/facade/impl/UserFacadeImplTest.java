@@ -146,7 +146,8 @@ class UserFacadeImplTest {
         // Create register request
         registerRequest = RegisterRequest.builder()
                 .email("test@example.com")
-                .password("password")
+                .password("Password123!")
+                .confirmPassword("Password123!")
                 .build();
 
         // Create recipient info request

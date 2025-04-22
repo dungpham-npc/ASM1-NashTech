@@ -4,10 +4,12 @@ import com.dungpham.asm1.common.enums.ErrorCode;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -31,27 +33,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getHttpStatus()).body(response);
     }
 
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<BaseResponse<List<ExceptionResponse>>> handleValidation(MethodArgumentNotValidException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(err -> new ExceptionResponse(err.getField(), err.getDefaultMessage()))
+                .map(err -> new ExceptionResponse(null, err.getField() + " - " + err.getDefaultMessage()))
                 .toList();
-        return ResponseEntity.badRequest().body(BaseResponse.build(errors, false));
+        return buildSimpleError("VALIDATION_ERROR", "Validation failed", HttpStatus.BAD_REQUEST, errors, true);
     }
-
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleBadCredentials() {
         return buildSimpleError("BAD_CREDENTIAL_LOGIN", "Invalid username or password", HttpStatus.UNAUTHORIZED);
     }
 
-
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleSecurity() {
         return buildSimpleError("UNAUTHORIZED_ACCESS", "Access denied", HttpStatus.FORBIDDEN);
     }
-
 
     @ExceptionHandler({
             IllegalArgumentException.class,
@@ -72,10 +70,10 @@ public class GlobalExceptionHandler {
         return buildSimpleError("NULL_POINTER_EXCEPTION", ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleGeneric(Exception ex) {
-        return buildSimpleError("INTERNAL_ERROR", "Unexpected error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
+        return buildSimpleError("INTERNAL_ERROR", "Error happened while processing your request, contact admin for more info", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -86,9 +84,44 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleInternalServer(InternalServerException ex) {
+        return buildSimpleError(
+                "INTERNAL_ERROR",
+                "Please contact admin for more info",
+                HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleRedisConnection(RedisConnectionFailureException ex) {
+        log.error("Redis connection failure: {}", ex.getMessage(), ex);
+        return buildSimpleError(
+                "REDIS_CONNECTION_ERROR",
+                "Service temporarily unavailable. Please try again later.",
+                HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<BaseResponse<List<ExceptionResponse>>> handleBindException(org.springframework.validation.BindException ex) {
+        var errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> new ExceptionResponse(null, err.getField() + " - " + err.getDefaultMessage()))
+                .toList();
+        return buildSimpleError("VALIDATION_ERROR", "Validation failed", HttpStatus.BAD_REQUEST, errors, true);
+    }
 
     private ResponseEntity<BaseResponse<ExceptionResponse>> buildSimpleError(String code, String message, HttpStatus status) {
         return ResponseEntity.status(status)
                 .body(BaseResponse.build(new ExceptionResponse(code, message), false));
     }
+
+    private <T> ResponseEntity<BaseResponse<T>> buildSimpleError(String code, String message, HttpStatus status, T data, boolean overrideResponseFields) {
+        BaseResponse<T> response = BaseResponse.build(data, false);
+        if (overrideResponseFields) {
+            response.setCode(code);
+            response.setMessage(message);
+        }
+        return ResponseEntity.status(status).body(response);
+    }
+
+
 }

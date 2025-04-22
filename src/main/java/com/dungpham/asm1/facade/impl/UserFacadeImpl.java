@@ -67,6 +67,10 @@ public class UserFacadeImpl implements UserFacade {
             throw new NotFoundException("User");
         }
 
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new InvalidArgumentException("Password", "New password and confirmation do not match.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
