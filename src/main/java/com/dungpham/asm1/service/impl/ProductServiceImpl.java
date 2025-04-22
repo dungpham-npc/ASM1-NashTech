@@ -39,7 +39,7 @@ public class ProductServiceImpl implements ProductService {
 
     private void validateProduct(Product product, boolean isUpdate) {
         if (isUpdate && product.getId() == null) {
-            throw new NotFoundException("Product ID must not be null for update");
+            throw new NotFoundException("Product");
         }
         if (!isUpdate && product.getId() != null) {
             throw new InvalidArgumentException("id", "Product ID must be null for creation");

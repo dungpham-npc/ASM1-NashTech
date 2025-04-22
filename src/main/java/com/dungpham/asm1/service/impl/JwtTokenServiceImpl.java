@@ -35,8 +35,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     public String generateToken(SecurityUserDetails user) {
         Map<String, Object> claims = getClaims(user);
         return Jwts.builder()
-                .setSubject(user.getEmail())
                 .setClaims(claims)
+                .setSubject(user.getEmail())    // Set subject after setClaims()
                 .setIssuedAt(new Date())
                 .setExpiration(
                         new Date(System.currentTimeMillis() + Long.parseLong(accessTokenExpirationTime)))

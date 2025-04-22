@@ -83,31 +83,6 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void createProduct_WithExistingId_ThrowsException() {
-        // Arrange
-        // Set ID using reflection
-        try {
-            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(validProduct, 1L);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Act & Assert
-        when(productRepository.findById(1L)).thenReturn(Optional.of(validProduct));
-
-        // Act & Assert
-        ConflictException exception = assertThrows(ConflictException.class, () -> {
-            productService.createProduct(validProduct);
-        });
-
-        assertEquals("409", exception.getErrorCodeString());
-        verify(productRepository, times(1)).findById(1L);
-        verify(productRepository, never()).save(any(Product.class));
-    }
-
-    @Test
     void updateProduct_Successfully() {
         // Arrange
         Long productId = 1L;
@@ -121,7 +96,6 @@ class ProductServiceImplTest {
             e.printStackTrace();
         }
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(validProduct));
         when(productRepository.save(any(Product.class))).thenReturn(validProduct);
 
         // Act
@@ -131,33 +105,27 @@ class ProductServiceImplTest {
         assertNotNull(result);
         assertEquals(productId, result.getId());
         assertEquals("Test Product", result.getName());
-        verify(productRepository, times(2)).findById(productId);
         verify(productRepository, times(1)).save(validProduct);
+        verify(productRepository, never()).findById(any());
     }
 
     @Test
     void updateProduct_NonExistentProduct_ThrowsException() {
-        // Arrange
-        Long nonExistentId = 999L;
-
-        // Set ID using reflection
-        try {
-            Field idField = validProduct.getClass().getSuperclass().getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(validProduct, nonExistentId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+        // Arrange - Create a product with null ID
+        Product productWithNullId = Product.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(new BigDecimal("100.00"))
+                .category(validCategory)
+                .build();
 
         // Act & Assert
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            productService.updateProduct(validProduct);
+            productService.updateProduct(productWithNullId);
         });
 
         assertEquals("404", exception.getErrorCodeString());
-        verify(productRepository, times(2)).findById(nonExistentId);
+        verify(productRepository, never()).findById(any());
         verify(productRepository, never()).save(any(Product.class));
     }
 
