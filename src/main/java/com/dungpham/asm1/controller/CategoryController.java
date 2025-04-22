@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,6 +58,7 @@ public class CategoryController {
     @Operation(summary = "Create a new category", tags = {tag})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<CategoryResponse> createCategory(@RequestBody CategoryRequest request) {
         Category category = categoryMapper.toEntity(request);
 
@@ -69,6 +72,7 @@ public class CategoryController {
     @Operation(summary = "Update a category", tags = {tag})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<CategoryResponse> updateCategory(
             @PathVariable Long id, @RequestBody CategoryRequest request) {
         Category existingCategory = categoryService.getCategory(id);
@@ -87,6 +91,7 @@ public class CategoryController {
             tags = {tag})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<String> deleteCategory(@PathVariable Long id) {
         categoryService.removeCategory(id);
         return BaseResponse.build("Category deleted successfully", true);

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -84,6 +85,7 @@ public class ProductController {
             tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<ProductResponse> createProduct(
             @RequestPart(value = "productImages") List<MultipartFile> productImages,
             @RequestPart(value = "request") ProductRequest request) {
@@ -97,6 +99,7 @@ public class ProductController {
             tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<ProductResponse> updateProduct(
             @PathVariable Long id,
             @RequestBody ProductRequest request) {
@@ -110,6 +113,7 @@ public class ProductController {
             tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<String> removeProduct(@PathVariable Long id) {
         productFacade.removeProduct(id);
         return BaseResponse.build("Product deleted successfully", true);
@@ -122,6 +126,7 @@ public class ProductController {
             tags = {TAG})
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public BaseResponse<String> rateProduct(
             @PathVariable Long id,
             @RequestParam Integer rating) {
