@@ -69,8 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        try {
-            if (token != null && jwtTokenServices.validateToken(token)) {
+        if (token != null) {
+            if (jwtTokenServices.validateToken(token)) {
                 String email = jwtTokenServices.getEmailFromJwtToken(token);
                 var userDetails = userService.loadUserByUsername(email);
 
@@ -83,17 +83,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 log.info("Authentication set for user: {}", email);
-            } else if (token != null) {
-                throw new InvalidTokenException();
+            } else {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"status\":false,\"message\":\"Token is invalid or expired\"}");
+                return;
             }
-
-            filterChain.doFilter(request, response);
-
-        } catch (InvalidTokenException ex) {
-            log.error("Token validation failed: {}", ex.getMessage());
-            SecurityContextHolder.clearContext();
-            throw ex; // Let Spring Security handle it with CustomAuthenticationEntryPoint
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private boolean isPublicEndpoint(String method, String uri) {
