@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,17 +39,19 @@ public class GlobalExceptionHandler {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> new ExceptionResponse(null, err.getField() + " - " + err.getDefaultMessage()))
                 .toList();
-        return buildSimpleError("VALIDATION_ERROR", "Validation failed", HttpStatus.BAD_REQUEST, errors, true);
+        return buildSimpleError(ErrorCode.VALIDATION_ERROR, "Validation failed", HttpStatus.BAD_REQUEST, errors, true);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<BaseResponse<ExceptionResponse>> handleBadCredentials() {
-        return buildSimpleError("BAD_CREDENTIAL_LOGIN", "Invalid username or password", HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleBadCredentials(BadCredentialsException ex) {
+        log.error("Bad credentials: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.BAD_CREDENTIAL_LOGIN, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<BaseResponse<ExceptionResponse>> handleSecurity() {
-        return buildSimpleError("UNAUTHORIZED_ACCESS", "Access denied", HttpStatus.FORBIDDEN);
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleSecurity(SecurityException ex) {
+        log.error("Security exception: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.UNAUTHORIZED_ACCESS, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler({
@@ -56,72 +59,75 @@ public class GlobalExceptionHandler {
             IllegalStateException.class
     })
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleInvalidState(RuntimeException ex) {
-        return buildSimpleError("INVALID_REQUEST", ex.getMessage(), HttpStatus.BAD_REQUEST);
+        return buildSimpleError(ErrorCode.INVALID_REQUEST, ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleIO(IOException ex) {
-        return buildSimpleError("IO_ERROR", ex.getMessage(), HttpStatus.BAD_REQUEST);
+        log.error("IO exception: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleNullPointer(NullPointerException ex) {
-        ex.printStackTrace();
-        return buildSimpleError("NULL_POINTER_EXCEPTION", ex.getMessage(), HttpStatus.BAD_REQUEST);
+        log.error("Null pointer exception: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.INTERNAL_ERROR, ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleGeneric(Exception ex) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);
-        return buildSimpleError("INTERNAL_ERROR", "Error happened while processing your request, contact admin for more info", HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildSimpleError(ErrorCode.INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleAccessDenied(AccessDeniedException ex) {
-        return buildSimpleError(
-                "ACCESS_DENIED",
-                "You don't have permission to access this resource",
-                HttpStatus.FORBIDDEN);
+        log.error("Access denied: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.ACCESS_DENIED, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(InternalServerException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleInternalServer(InternalServerException ex) {
-        return buildSimpleError(
-                "INTERNAL_ERROR",
-                "Please contact admin for more info",
-                HttpStatus.BAD_REQUEST);
+        log.error("Internal server error: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(RedisConnectionFailureException.class)
     public ResponseEntity<BaseResponse<ExceptionResponse>> handleRedisConnection(RedisConnectionFailureException ex) {
         log.error("Redis connection failure: {}", ex.getMessage(), ex);
-        return buildSimpleError(
-                "REDIS_CONNECTION_ERROR",
-                "Service temporarily unavailable. Please try again later.",
-                HttpStatus.SERVICE_UNAVAILABLE);
+        return buildSimpleError(ErrorCode.SERVICE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<BaseResponse<List<ExceptionResponse>>> handleBindException(org.springframework.validation.BindException ex) {
+    public ResponseEntity<BaseResponse<List<ExceptionResponse>>> handleBindException(BindException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> new ExceptionResponse(null, err.getField() + " - " + err.getDefaultMessage()))
                 .toList();
-        return buildSimpleError("VALIDATION_ERROR", "Validation failed", HttpStatus.BAD_REQUEST, errors, true);
+        return buildSimpleError(ErrorCode.VALIDATION_ERROR, "Validation failed", HttpStatus.BAD_REQUEST, errors, true);
     }
 
-    private ResponseEntity<BaseResponse<ExceptionResponse>> buildSimpleError(String code, String message, HttpStatus status) {
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<BaseResponse<ExceptionResponse>> handleInternalAuthenticationServiceException(InternalAuthenticationServiceException ex) {
+        log.error("Internal authentication service exception: {}", ex.getMessage(), ex);
+        return buildSimpleError(ErrorCode.AUTHENTICATION_SERVICE_ERROR, HttpStatus.UNAUTHORIZED);
+    }
+
+    private ResponseEntity<BaseResponse<ExceptionResponse>> buildSimpleError(ErrorCode errorCode, HttpStatus status) {
         return ResponseEntity.status(status)
-                .body(BaseResponse.build(new ExceptionResponse(code, message), false));
+                .body(BaseResponse.build(new ExceptionResponse(errorCode.getCode(), errorCode.formatMessage()), false));
     }
 
-    private <T> ResponseEntity<BaseResponse<T>> buildSimpleError(String code, String message, HttpStatus status, T data, boolean overrideResponseFields) {
+    private ResponseEntity<BaseResponse<ExceptionResponse>> buildSimpleError(ErrorCode errorCode, String arg, HttpStatus status) {
+        return ResponseEntity.status(status)
+                .body(BaseResponse.build(new ExceptionResponse(errorCode.getCode(), errorCode.formatMessage(arg)), false));
+    }
+
+    private <T> ResponseEntity<BaseResponse<T>> buildSimpleError(ErrorCode errorCode, String message, HttpStatus status, T data, boolean overrideResponseFields) {
         BaseResponse<T> response = BaseResponse.build(data, false);
         if (overrideResponseFields) {
-            response.setCode(code);
-            response.setMessage(message);
+            response.setCode(errorCode.getCode());
+            response.setMessage(errorCode.formatMessage(message));
         }
         return ResponseEntity.status(status).body(response);
     }
-
-
 }

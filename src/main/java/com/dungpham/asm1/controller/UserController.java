@@ -81,7 +81,7 @@ public class UserController {
         return userFacade.createUser(request);
     }
 
-    @GetMapping("/current")
+    @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Get current user profile",
@@ -92,7 +92,7 @@ public class UserController {
         return userFacade.getCurrentUserProfile();
     }
 
-    @PutMapping("/current")
+    @PutMapping("/me")
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Update current user profile",

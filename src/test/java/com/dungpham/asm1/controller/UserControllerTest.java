@@ -102,6 +102,7 @@ public class UserControllerTest {
         RegisterRequest registerRequest = RegisterRequest.builder()
                 .email("dungpham@gmail.com")
                 .password("Secured123!")
+                .confirmPassword("Secured123!")
                 .build();
 
         LoginResponse loginResponse = LoginResponse.builder()

@@ -12,6 +12,9 @@ import java.util.Map;
 public class CloudinaryConfig {
 
     private final Dotenv dotenv;
+    private static final String CLOUDINARY_CLOUD_NAME = "CLOUDINARY_CLOUD_NAME";
+    private static final String CLOUDINARY_API_KEY = "CLOUDINARY_API_KEY";
+    private static final String CLOUDINARY_API_SECRET = "CLOUDINARY_API_SECRET";
 
     public CloudinaryConfig() {
         this.dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -20,9 +23,9 @@ public class CloudinaryConfig {
     @Bean
     public Cloudinary cloudinary() {
         Map<String, String> config = new HashMap<>();
-        config.put("cloud_name", dotenv.get("CLOUDINARY_CLOUD_NAME"));
-        config.put("api_key", dotenv.get("CLOUDINARY_API_KEY"));
-        config.put("api_secret", dotenv.get("CLOUDINARY_API_SECRET"));
+        config.put(CLOUDINARY_CLOUD_NAME, dotenv.get("CLOUDINARY_CLOUD_NAME"));
+        config.put(CLOUDINARY_API_KEY, dotenv.get("CLOUDINARY_API_KEY"));
+        config.put(CLOUDINARY_API_SECRET, dotenv.get("CLOUDINARY_API_SECRET"));
         return new Cloudinary(config);
     }
 }

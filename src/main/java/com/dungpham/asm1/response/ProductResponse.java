@@ -16,8 +16,9 @@ public class ProductResponse {
     private String name;
     private String description;
     private BigDecimal price;
-    private String thumbnailUrl;
-    private List<String> imageUrls;
+    private String thumbnailImgKey;
+    private List<String> imageKeys;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.0")
     private BigDecimal averageRating;
     private CategoryResponse category;
 }

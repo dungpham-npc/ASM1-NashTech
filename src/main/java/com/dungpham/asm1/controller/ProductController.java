@@ -32,20 +32,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class ProductController {
+public class ProductController {        //TODO: Add product getAll and getById methods for admin
     private final String TAG = "Product APIs";
 
     private final ProductFacade productFacade;
-
-    @GetMapping("/featured")
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(
-            summary = "Get featured products",
-            tags = {TAG})
-    @Logged
-    public BaseResponse<List<ProductResponse>> getFeaturedProducts() {
-        return productFacade.getFeaturedProducts();
-    }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -58,6 +48,7 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean isFeatured,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,asc") String[] sort) {
@@ -66,8 +57,10 @@ public class ProductController {
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
         Specification<Product> spec = Specification
-                .where(ProductSpecification.hasName(productName))
+                .where(ProductSpecification.isActive())
+                .and(ProductSpecification.hasName(productName))
                 .and(ProductSpecification.hasPriceInRange(minPrice, maxPrice))
+                .and(ProductSpecification.isFeatured(isFeatured))
                 .and(ProductSpecification.hasCategoryId(categoryId));
 
         return productFacade.getAllProducts(spec, pageable);

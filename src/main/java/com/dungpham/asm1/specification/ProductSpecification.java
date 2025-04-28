@@ -8,10 +8,14 @@ import java.math.BigDecimal;
 public class ProductSpecification {
     public static Specification<Product> hasName(String name) {
         return (root, query, criteriaBuilder) -> {
-            if (name == null || name.isEmpty()) {
+            if (name == null || name.trim().isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.like(root.get("name"), "%" + name + "%");
+            String searchTerm = "%" + name.trim().toLowerCase() + "%";
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("name")),
+                    searchTerm
+            );
         };
     }
 
@@ -36,4 +40,19 @@ public class ProductSpecification {
             return criteriaBuilder.equal(root.get("category").get("id"), categoryId);
         };
     }
+
+    public static Specification<Product> isActive() {
+        return (root, query, cb) -> cb.isTrue(root.get("isActive"));
+    }
+
+    public static Specification<Product> isFeatured(Boolean isFeatured) {
+        return (root, query, cb) -> {
+            if (isFeatured == null) {
+                return cb.conjunction(); // no filter applied
+            }
+            return cb.equal(root.get("isFeatured"), isFeatured);
+        };
+    }
+
+
 }

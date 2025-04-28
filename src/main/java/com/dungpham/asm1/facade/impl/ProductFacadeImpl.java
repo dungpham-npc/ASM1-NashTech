@@ -29,7 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductFacadeImpl implements ProductFacade {
     private static final String DEFAULT_THUMBNAIL = "null.jpg";
-    private static final int RATING_SCALE = 2;
+    private static final int RATING_SCALE = 1;
 
     private final ProductService productService;
     private final ProductMapper productMapper;
@@ -59,8 +59,10 @@ public class ProductFacadeImpl implements ProductFacade {
         Product product = productService.getProductById(id);
         ProductResponse response = productMapper.toProductDetailsResponse(product);
         response.setAverageRating(getScaledAverageRating(product));
-        response.setImageUrls(getImageUrls(product.getImages()));
-        response.setThumbnailUrl(null);
+        response.setImageKeys(product.getImages().stream()
+                .map(ProductImage::getImageKey)
+                .toList());
+        response.setThumbnailImgKey(null);
         return BaseResponse.build(response, true);
     }
 
@@ -72,11 +74,12 @@ public class ProductFacadeImpl implements ProductFacade {
         if (productImages != null && !productImages.isEmpty()) {
             product.setImages(productImageService.saveImages(productImages, product));
         }
+        product.setFeatured(request.isFeatured());
         Product savedProduct = productService.createProduct(product);
         ProductResponse response = productMapper.toProductDetailsResponse(savedProduct);
 
         response.setAverageRating(BigDecimal.ZERO);
-        response.setImageUrls(getImageUrls(savedProduct.getImages()));
+        response.setImageKeys(getImageUrls(savedProduct.getImages()));
         return BaseResponse.build(response, true);
     }
 
@@ -85,11 +88,12 @@ public class ProductFacadeImpl implements ProductFacade {
         Product product = productService.getProductById(id);
         productMapper.updateEntity(request, product);
         product.setCategory(getCategoryOrThrow(request.getCategoryId()));
+        product.setFeatured(request.isFeatured());
         Product updatedProduct = productService.updateProduct(product);
 
         ProductResponse response = productMapper.toProductDetailsResponse(updatedProduct);
         response.setAverageRating(getScaledAverageRating(updatedProduct));
-        response.setImageUrls(getImageUrls(updatedProduct.getImages()));
+        response.setImageKeys(getImageUrls(updatedProduct.getImages()));
         return BaseResponse.build(response, true);
     }
 
@@ -124,10 +128,11 @@ public class ProductFacadeImpl implements ProductFacade {
                 .filter(ProductImage::isThumbnail)
                 .findFirst()
                 .orElse(null);
-        response.setThumbnailUrl(thumbnail != null
-                ? cloudinaryService.getImageUrl(thumbnail.getImageKey())
+        response.setThumbnailImgKey(thumbnail != null
+                ? productImageService.getProductThumbnail(product).getImageKey()
                 : DEFAULT_THUMBNAIL);
-        response.setImageUrls(null);
+        response.setImageKeys(null);
+        response.setAverageRating(getScaledAverageRating(product));
         return response;
     }
 

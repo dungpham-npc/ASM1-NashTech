@@ -33,6 +33,9 @@ public class RegisterRequest {
     @Schema(description = "password", example = "Password123!")
     private String password;
 
+
+    @NotNull(message = "Password is required")
+    @NotBlank(message = "Password cannot be blank")
     @Schema(description = "confirm password", example = "Password123!")
     private String confirmPassword;
 }

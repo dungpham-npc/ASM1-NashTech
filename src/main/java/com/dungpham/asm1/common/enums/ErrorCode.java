@@ -15,13 +15,21 @@ public enum ErrorCode {
     NOT_FOUND("404", "%s not found"),
     BAD_REQUEST("400", "%s is invalid"),
     UNAUTHORIZED("401", "Unauthorized access to %s"),
-    VALIDATION_ERROR("422", "Validation error: %s"),
+    VALIDATION_ERROR("400", "Validation error: %s"),
     CONFLICT("409", "%s already exists"),
     FORBIDDEN("403", "Access to %s is forbidden"),
     INVALID_TOKEN("401", "Token is invalid or expired"),
     RATE_LIMIT_EXCEEDED("429", "Rate limit exceeded for %s"),
-    INTERNAL_ERROR("500", "An unexpected error occurred: %s"),
-    INVALID_ARGUMENT("400", "Invalid argument: %s - %s");
+    INTERNAL_ERROR("500", "Error happened while processing your request, contact admin for more info"),
+    INVALID_ARGUMENT("400", "Invalid argument: %s - %s"),
+    BAD_CREDENTIAL_LOGIN("401", "Invalid username or password"),
+    UNAUTHORIZED_ACCESS("403", "Access denied"),
+    INVALID_REQUEST("400", "Invalid request: %s"),
+    IO_ERROR("400", "IO error: %s"),
+    ACCESS_DENIED("403", "You don't have permission to access this resource"),
+    REDIS_CONNECTION_ERROR("503", "Service temporarily unavailable due to Redis connection failure"),
+    AUTHENTICATION_SERVICE_ERROR("401", "Authentication service error, please try again later"),
+    SERVICE_UNAVAILABLE("503", "Service temporarily unavailable, please try again later"),;
 
     private final String code;
     private final String messageTemplate;

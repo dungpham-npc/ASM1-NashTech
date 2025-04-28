@@ -52,24 +52,6 @@ public class ProductControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void getFeaturedProducts_Successfully() throws Exception {
-        List<ProductResponse> products = List.of(
-                createProductResponse(1L, "iPhone", BigDecimal.valueOf(999.99)),
-                createProductResponse(2L, "Samsung Galaxy", BigDecimal.valueOf(899.99))
-        );
-
-        when(productFacade.getFeaturedProducts()).thenReturn(BaseResponse.build(products, true));
-
-        mockMvc.perform(get("/api/v1/products/featured"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is("200")))
-                .andExpect(jsonPath("$.message", is("Success")))
-                .andExpect(jsonPath("$.data", hasSize(2)))
-                .andExpect(jsonPath("$.data[0].name", is("iPhone")))
-                .andExpect(jsonPath("$.data[1].name", is("Samsung Galaxy")));
-    }
-
-    @Test
     void getFeaturedProducts_Success_ReturnsCorrectResponse() throws Exception {
         Page<ProductResponse> productPage = new PageImpl<>(
                 List.of(createProductResponse(1L, "iPhone", BigDecimal.valueOf(999.99))),
