@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -18,6 +19,9 @@ public class ProductResponse {
     private BigDecimal price;
     private String thumbnailImgKey;
     private List<String> imageKeys;
+    private Boolean isFeatured;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.0")
     private BigDecimal averageRating;
     private CategoryResponse category;

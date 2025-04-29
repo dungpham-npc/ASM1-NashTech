@@ -15,9 +15,13 @@ import com.dungpham.asm1.service.*;
 import com.dungpham.asm1.service.impl.UserDetailsServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +31,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductFacadeImpl implements ProductFacade {
     private static final String DEFAULT_THUMBNAIL = "null.jpg";
     private static final int RATING_SCALE = 1;
@@ -57,12 +62,27 @@ public class ProductFacadeImpl implements ProductFacade {
     @Override
     public BaseResponse<ProductResponse> getProductDetails(Long id) {
         Product product = productService.getProductById(id);
-        ProductResponse response = productMapper.toProductDetailsResponse(product);
+        ProductResponse response;
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isAdmin = auth != null
+                && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken)
+                && auth.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+
+        response = isAdmin
+                ? productMapper.toProductManagementDetailsResponse(product)
+                : productMapper.toProductDetailsResponse(product);
+
+
         response.setAverageRating(getScaledAverageRating(product));
         response.setImageKeys(product.getImages().stream()
                 .map(ProductImage::getImageKey)
                 .toList());
         response.setThumbnailImgKey(null);
+
         return BaseResponse.build(response, true);
     }
 

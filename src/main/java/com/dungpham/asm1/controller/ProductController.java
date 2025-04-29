@@ -72,6 +72,7 @@ public class ProductController {        //TODO: Add product getAll and getById m
             summary = "Get a product's details by id",
             tags = {TAG})
     @Logged
+    @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<ProductResponse> getProductById(@PathVariable Long id) {
         return productFacade.getProductDetails(id);
     }
