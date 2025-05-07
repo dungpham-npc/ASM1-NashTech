@@ -19,6 +19,7 @@ public interface ProductMapper {
     @Mapping(source = "category", target = "category", qualifiedByName = "toListResponse")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Named("toProductResponse")
     ProductResponse toProductResponse(Product product);
 
     @Mapping(source = "id", target = "id")

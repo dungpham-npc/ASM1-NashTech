@@ -145,6 +145,11 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/products/{id}/rate").hasRole("CUSTOMER")
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/verify-otp").hasAnyRole("CUSTOMER", "ADMIN")
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/change-password").hasAnyRole("CUSTOMER", "ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/cart").hasRole("CUSTOMER")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/cart").hasRole("CUSTOMER")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/cart/**").hasRole("CUSTOMER")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/cart/**").hasRole("CUSTOMER")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/cart").hasRole("CUSTOMER")
                             .anyRequest().authenticated();
                 });
 

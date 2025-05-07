@@ -29,6 +29,6 @@ public class Cart extends BaseEntity {
     @JsonManagedReference
     private List<CartItem> cartItems = new ArrayList<>();
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 }
