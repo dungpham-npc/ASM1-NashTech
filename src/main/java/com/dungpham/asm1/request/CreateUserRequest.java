@@ -23,14 +23,6 @@ public class CreateUserRequest {
     @Schema(description = "email", example = "email@example.com")
     private String email;
 
-    @NotNull(message = "Password is required")
-    @NotBlank(message = "Password cannot be blank")
-    @Pattern(
-            regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
-            message =
-                    "The password must be at least 8 characters, including letters, numbers, and special characters.")
-    @Schema(description = "password", example = "Password123!")
-    private String password;
 
     @NotNull(message = "Role ID is required")
     @Positive(message = "Role ID must be a positive number")

@@ -97,6 +97,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void updatePassword(User user, String newPassword) {
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new InvalidArgumentException("password", "Password cannot be empty");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @Override
     @Transactional
     @Logged
     public void deactivateUser(Long id) {

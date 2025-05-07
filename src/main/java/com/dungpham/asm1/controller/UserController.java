@@ -3,14 +3,12 @@ package com.dungpham.asm1.controller;
 import com.dungpham.asm1.entity.User;
 import com.dungpham.asm1.facade.UserFacade;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
-import com.dungpham.asm1.request.CreateUserRequest;
-import com.dungpham.asm1.request.LoginRequest;
-import com.dungpham.asm1.request.RegisterRequest;
-import com.dungpham.asm1.request.UpdateUserProfileRequest;
+import com.dungpham.asm1.request.*;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.LoginResponse;
 import com.dungpham.asm1.response.UserDetailsResponse;
 import com.dungpham.asm1.response.UserProfileResponse;
+import com.dungpham.asm1.service.MailService;
 import com.dungpham.asm1.specification.ProductSpecification;
 import com.dungpham.asm1.specification.UserSpecification;
 import io.swagger.v3.oas.annotations.Operation;
@@ -126,6 +124,28 @@ public class UserController {
                 .and(UserSpecification.hasRole(roleId));
 
         return userFacade.getAllUsers(spec, pageable);
+    }
+
+    @PostMapping("/change-password")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Change password",
+            tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Logged
+    public BaseResponse<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        return userFacade.changePassword(request);
+    }
+
+    @PostMapping("/verify-otp")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Verify OTP and complete password change",
+            tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Logged
+    public BaseResponse<String> verifyOtpAndChangePassword(@Valid @RequestBody OtpRequest request) {
+        return userFacade.verifyOtpAndChangePassword(request);
     }
 
     @DeleteMapping("/{id}")

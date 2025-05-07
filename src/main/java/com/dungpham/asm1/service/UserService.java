@@ -22,5 +22,7 @@ public interface UserService {
 
     User getUserById(Long id);
 
+    void updatePassword(User user, String newPassword);
+
     void deactivateUser(Long id);
 }

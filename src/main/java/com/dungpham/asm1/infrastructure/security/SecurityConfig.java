@@ -143,30 +143,9 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.PUT,"/api/v1/users/current/**").hasAnyRole("CUSTOMER", "ADMIN")
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/logout").hasAnyRole("CUSTOMER", "ADMIN")
                             .requestMatchers(HttpMethod.POST, "/api/v1/products/{id}/rate").hasRole("CUSTOMER")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/verify-otp").hasAnyRole("CUSTOMER", "ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/change-password").hasAnyRole("CUSTOMER", "ADMIN")
                             .anyRequest().authenticated();
-
-                    // Log each authorization rule
-                    log.info("Authorization rule: permitAll for WHITE_LIST: {}", (Object) WHITE_LIST);
-                    log.info("Authorization rule: permitAll for PUBLIC_LIST: {}", (Object) PUBLIC_LIST);
-                    log.info("Authorization rule: permitAll for GET /error");
-                    log.info("Authorization rule: permitAll for GET /api/v1/products");
-                    log.info("Authorization rule: permitAll for GET /api/v1/products/featured");
-                    log.info("Authorization rule: permitAll for GET /api/v1/products/**");
-                    log.info("Authorization rule: hasRole(ADMIN) for POST /api/v1/products");
-                    log.info("Authorization rule: hasRole(ADMIN) for PUT /api/v1/products/**");
-                    log.info("Authorization rule: hasRole(ADMIN) for DELETE /api/v1/products/**");
-                    log.info("Authorization rule: permitAll for GET /api/v1/categories");
-                    log.info("Authorization rule: permitAll for GET /api/v1/categories/**");
-                    log.info("Authorization rule: hasRole(ADMIN) for POST /api/v1/categories");
-                    log.info("Authorization rule: hasRole(ADMIN) for PUT /api/v1/categories/**");
-                    log.info("Authorization rule: hasRole(ADMIN) for DELETE /api/v1/categories/**");
-                    log.info("Authorization rule: hasRole(ADMIN) for /api/v1/users");
-                    log.info("Authorization rule: hasRole(ADMIN) for /api/v1/users/**");
-                    log.info("Authorization rule: hasAnyRole(CUSTOMER, ADMIN) for /api/v1/users/current");
-                    log.info("Authorization rule: hasAnyRole(CUSTOMER, ADMIN) for /api/v1/users/current/**");
-                    log.info("Authorization rule: hasAnyRole(CUSTOMER, ADMIN) for /api/v1/users/logout");
-                    log.info("Authorization rule: hasAnyRole(CUSTOMER) for /api/v1/products/{id}/rate");
-                    log.info("Authorization rule: authenticated for any other request");
                 });
 
         log.info("Adding authentication provider");

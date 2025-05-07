@@ -1,10 +1,7 @@
 package com.dungpham.asm1.facade;
 
 import com.dungpham.asm1.entity.User;
-import com.dungpham.asm1.request.CreateUserRequest;
-import com.dungpham.asm1.request.LoginRequest;
-import com.dungpham.asm1.request.RegisterRequest;
-import com.dungpham.asm1.request.UpdateUserProfileRequest;
+import com.dungpham.asm1.request.*;
 import com.dungpham.asm1.response.BaseResponse;
 import com.dungpham.asm1.response.LoginResponse;
 import com.dungpham.asm1.response.UserDetailsResponse;
@@ -21,6 +18,10 @@ public interface UserFacade {
     BaseResponse<LoginResponse> register(RegisterRequest request);
 
     BaseResponse<String> logout();
+
+    BaseResponse<String> changePassword(ChangePasswordRequest request);
+
+    BaseResponse<String> verifyOtpAndChangePassword(OtpRequest request);
 
     BaseResponse<UserProfileResponse> getCurrentUserProfile();
 

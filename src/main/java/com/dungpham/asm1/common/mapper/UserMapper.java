@@ -52,7 +52,6 @@ public interface UserMapper {
     User toEntity(RegisterRequest request);
 
     @Mapping(source = "email", target = "email")
-    @Mapping(source = "password", target = "password")
     @Mapping(target = "role", ignore = true)
     User toEntity(CreateUserRequest request);
 
