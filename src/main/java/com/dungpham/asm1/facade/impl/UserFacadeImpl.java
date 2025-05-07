@@ -264,4 +264,11 @@ public class UserFacadeImpl implements UserFacade {
 
         return userMapper.toLoginResponseWithToken(user, LoginResponse.builder().build(), accessToken);
     }
+
+    @Override
+    @Logged
+    public BaseResponse<String> activateUser(Long id) {
+        userService.activateUser(id);
+        return BaseResponse.build("User activated successfully", true);
+    }
 }

@@ -159,7 +159,8 @@ class CategoryServiceImplTest {
                 .description("New description")
                 .build();
 
-        when(categoryRepository.findByNameAndIsActiveTrue(duplicateName))
+        // Change this to mock findByName instead of findByNameAndIsActiveTrue
+        when(categoryRepository.findByName(duplicateName))
                 .thenReturn(Optional.of(validCategory));
 
         // Act & Assert
@@ -168,7 +169,7 @@ class CategoryServiceImplTest {
         });
 
         assertEquals("409", exception.getErrorCodeString());
-        verify(categoryRepository, times(1)).findByNameAndIsActiveTrue(duplicateName);
+        verify(categoryRepository, times(1)).findByName(duplicateName);
         verify(categoryRepository, never()).save(any(Category.class));
     }
 

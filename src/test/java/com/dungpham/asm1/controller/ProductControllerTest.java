@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -167,7 +168,7 @@ public class ProductControllerTest {
                 .thenReturn(BaseResponse.build(response, true));
 
         // Act & Assert
-        mockMvc.perform(multipart("/api/v1/products/{id}", productId)
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/v1/products/{id}", productId)
                         .file(imagePart)
                         .file(requestPart)
                         .with(csrf()))
@@ -175,6 +176,38 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.code", is("200")))
                 .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data.name", is("Updated Product")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateProduct_WithInvalidRequest_ReturnsBadRequest() throws Exception {
+        // Arrange
+        Long productId = 1L;
+        ProductRequest request = ProductRequest.builder()
+                .name("")  // Invalid: empty name
+                .description("Updated Description")
+                .price(BigDecimal.valueOf(-50.00))  // Invalid: negative price
+                .categoryId(1L)
+                .build();
+
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request",
+                "",
+                "application/json",
+                objectMapper.writeValueAsBytes(request));
+
+        MockMultipartFile imagePart = new MockMultipartFile(
+                "productImages",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes());
+
+        // Act & Assert
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/v1/products/{id}", productId)
+                        .file(imagePart)
+                        .file(requestPart)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -399,26 +432,6 @@ public class ProductControllerTest {
         mockMvc.perform(multipart("/api/v1/products")
                         .file(imagePart)
                         .file(requestPart)
-                        .with(csrf()))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void updateProduct_WithInvalidRequest_ReturnsBadRequest() throws Exception {
-        // Arrange
-        Long productId = 1L;
-        ProductRequest request = ProductRequest.builder()
-                .name("")  // Invalid: empty name
-                .description("Updated Description")
-                .price(BigDecimal.valueOf(-50.00))  // Invalid: negative price
-                .categoryId(1L)
-                .build();
-
-        // Act & Assert
-        mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
                         .with(csrf()))
                 .andExpect(status().isBadRequest());
     }

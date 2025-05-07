@@ -158,4 +158,15 @@ public class UserController {
     public BaseResponse<String> deactivateUser(@PathVariable Long id) {
         return userFacade.deactivateUser(id);
     }
+
+    @PutMapping("/{id}/activate")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Activate user for admin",
+            tags = {TAG})
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Logged
+    public BaseResponse<String> activateUser(@PathVariable Long id) {
+        return userFacade.activateUser(id);
+    }
 }

@@ -115,4 +115,15 @@ public class UserServiceImpl implements UserService {
         user.setActive(false);
         userRepository.save(user);
     }
+
+    @Override
+    @Transactional
+    @Logged
+    public void activateUser(Long id) {
+        User user = userRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("User"));
+        user.setActive(true);
+        userRepository.save(user);
+    }
 }

@@ -32,4 +32,6 @@ public interface UserFacade {
     BaseResponse<UserDetailsResponse> createUser(CreateUserRequest request);
 
     BaseResponse<String> deactivateUser(Long id);
+
+    BaseResponse<String> activateUser(Long id);
 }
