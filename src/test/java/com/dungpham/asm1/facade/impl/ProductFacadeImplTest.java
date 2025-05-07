@@ -133,7 +133,7 @@ class ProductFacadeImplTest {
                 .description("New Description")
                 .price(new BigDecimal("200.00"))
                 .categoryId(1L)
-                .isFeatured(true)
+                .featured(true)
                 .build();
 
         // Create product responses
@@ -290,27 +290,55 @@ class ProductFacadeImplTest {
     }
 
     @Test
-    void updateProduct_Successfully() {
+    void updateProduct_WithImages_UpdatesProductAndAddsNewImages() {
         // Arrange
+        List<MultipartFile> images = Collections.singletonList(multipartFile);
+        List<ProductImage> savedImages = Collections.singletonList(thumbnailImage);
+        product.setImages(new ArrayList<>());
+
         when(productService.getProductById(product.getId())).thenReturn(product);
         when(categoryService.getCategory(productRequest.getCategoryId())).thenReturn(category);
+        when(productImageService.saveImages(images, product)).thenReturn(savedImages);
         when(productService.updateProduct(product)).thenReturn(product);
         when(productMapper.toProductDetailsResponse(product)).thenReturn(productDetailsResponse);
         when(productRatingService.getAverageRatingOfProduct(product)).thenReturn(new BigDecimal("4.50"));
         when(cloudinaryService.getImageUrl(anyString())).thenReturn("https://cloudinary.com/image_url");
 
         // Act
-        BaseResponse<ProductResponse> response = productFacade.updateProduct(productRequest, product.getId());
+        BaseResponse<ProductResponse> response = productFacade.updateProduct(productRequest, product.getId(), images);
 
         // Assert
         assertTrue(response.isStatus());
         assertEquals(productDetailsResponse, response.getData());
+
+        // Verify all method calls
         verify(productService).getProductById(product.getId());
         verify(productMapper).updateEntity(productRequest, product);
         verify(categoryService).getCategory(productRequest.getCategoryId());
+        verify(productImageService).saveImages(images, product);
         verify(productService).updateProduct(product);
         verify(productMapper).toProductDetailsResponse(product);
-        verify(productRatingService).getAverageRatingOfProduct(product);
+    }
+
+    @Test
+    void updateProduct_WithNoImages_OnlyUpdatesProductDetails() {
+        // Arrange
+        when(productService.getProductById(product.getId())).thenReturn(product);
+        when(categoryService.getCategory(productRequest.getCategoryId())).thenReturn(category);
+        when(productService.updateProduct(product)).thenReturn(product);
+        when(productMapper.toProductDetailsResponse(product)).thenReturn(productDetailsResponse);
+        when(productRatingService.getAverageRatingOfProduct(product)).thenReturn(new BigDecimal("4.50"));
+
+        // Act
+        BaseResponse<ProductResponse> response = productFacade.updateProduct(productRequest, product.getId(), null);
+
+        // Assert
+        assertTrue(response.isStatus());
+        assertEquals(productDetailsResponse, response.getData());
+
+        // Verify no image processing was done
+        verify(productImageService, never()).saveImages(any(), any());
+        verify(productService).updateProduct(product);
     }
 
     @Test
@@ -321,7 +349,7 @@ class ProductFacadeImplTest {
 
         // Act & Assert
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            productFacade.updateProduct(productRequest, product.getId());
+            productFacade.updateProduct(productRequest, product.getId(), null);
         });
 
         assertEquals("Category not found", exception.getMessage());
@@ -380,26 +408,6 @@ class ProductFacadeImplTest {
         verify(productService).getProductById(product.getId());
         verify(userService).getCurrentUser();
         verify(productRatingService, never()).rateProduct(any(), any(), anyInt());
-    }
-
-    @Test
-    void uploadProductImages_ThrowsUnsupportedOperationException() {
-        // Act & Assert
-        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
-            productFacade.uploadProductImages(product.getId(), Collections.singletonList(multipartFile));
-        });
-
-        assertEquals("Not implemented yet", exception.getMessage());
-    }
-
-    @Test
-    void deleteProductImage_ThrowsUnsupportedOperationException() {
-        // Act & Assert
-        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
-            productFacade.deleteProductImage("image_url");
-        });
-
-        assertEquals("Not implemented yet", exception.getMessage());
     }
 
     @Test

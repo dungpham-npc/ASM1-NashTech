@@ -47,7 +47,6 @@ public class ProductImageServiceImpl implements ProductImageService {
             return List.of();
         }
         List<ProductImage> result = new ArrayList<>();
-        // For new products, no need to check existing thumbnails
         if (product.getId() == null) {
             result.add(saveImage(files.getFirst(), product, true));
             if (files.size() > 1) {

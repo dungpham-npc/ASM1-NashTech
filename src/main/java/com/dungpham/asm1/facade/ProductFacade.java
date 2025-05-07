@@ -20,13 +20,9 @@ public interface ProductFacade {
 
     BaseResponse<ProductResponse> createProduct(ProductRequest request, List<MultipartFile> productImages);
 
-    BaseResponse<ProductResponse> updateProduct(ProductRequest request, Long id);
+    BaseResponse<ProductResponse> updateProduct(ProductRequest request, Long id, List<MultipartFile> productImages);
 
     BaseResponse<String> removeProduct(Long id);
 
     BaseResponse<String> rateProduct(Long productId, Integer rating);
-
-    BaseResponse<String> uploadProductImages(Long productId, List<MultipartFile> files);
-
-    BaseResponse<String> deleteProductImage(String imageUrl);
 }

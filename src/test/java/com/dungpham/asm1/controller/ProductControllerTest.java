@@ -138,8 +138,10 @@ public class ProductControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN") // Assuming ADMIN role is required
+    @WithMockUser(roles = "ADMIN")
     void updateProduct_Successfully() throws Exception {
+        // Arrange
+        Long productId = 1L;
         ProductRequest request = ProductRequest.builder()
                 .name("Updated Product")
                 .description("Updated Description")
@@ -149,12 +151,25 @@ public class ProductControllerTest {
 
         ProductResponse response = createProductResponse(1L, "Updated Product", BigDecimal.valueOf(299.99));
 
-        when(productFacade.updateProduct(any(), eq(1L)))
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request",
+                "",
+                "application/json",
+                objectMapper.writeValueAsBytes(request));
+
+        MockMultipartFile imagePart = new MockMultipartFile(
+                "productImages",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes());
+
+        when(productFacade.updateProduct(any(), eq(productId), anyList()))
                 .thenReturn(BaseResponse.build(response, true));
 
-        mockMvc.perform(put("/api/v1/products/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
+        // Act & Assert
+        mockMvc.perform(multipart("/api/v1/products/{id}", productId)
+                        .file(imagePart)
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is("200")))

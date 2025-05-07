@@ -16,7 +16,7 @@ public interface ProductMapper {
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "imageKeys", ignore = true)
     @Mapping(target = "averageRating", ignore = true)
-    @Mapping(target = "category", ignore = true)
+    @Mapping(source = "category", target = "category", qualifiedByName = "toListResponse")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     ProductResponse toProductResponse(Product product);

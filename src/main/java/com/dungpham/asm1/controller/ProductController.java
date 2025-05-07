@@ -85,14 +85,14 @@ public class ProductController {        //TODO: Add product getAll and getById m
     @Logged
     @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<ProductResponse> createProduct(
-            @RequestPart(value = "productImages") List<MultipartFile> productImages,
+            @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
             @Valid @RequestPart(value = "request") ProductRequest request) {
         log.info("Received ProductRequest: name={}, description={}, price={}, categoryId={}, isFeatured={}",
                 request.getName(), request.getDescription(), request.getPrice(), request.getCategoryId(), request.isFeatured());
         return productFacade.createProduct(request, productImages);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.OK)
     @Operation(
             summary = "Update a product",
@@ -101,8 +101,9 @@ public class ProductController {        //TODO: Add product getAll and getById m
     @SecurityRequirement(name = "Bearer Authentication")
     public BaseResponse<ProductResponse> updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request) {
-        return productFacade.updateProduct(request, id);
+            @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
+            @Valid @RequestPart(value = "request") ProductRequest request) {
+        return productFacade.updateProduct(request, id, productImages);
     }
 
     @DeleteMapping("/{id}")

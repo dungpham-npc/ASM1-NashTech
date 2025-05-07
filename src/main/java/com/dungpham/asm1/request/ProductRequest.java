@@ -24,7 +24,7 @@ public class ProductRequest {
     private String description;
 
     @Schema(description = "featured status", example = "true")
-    private boolean isFeatured;
+    private boolean featured;
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")

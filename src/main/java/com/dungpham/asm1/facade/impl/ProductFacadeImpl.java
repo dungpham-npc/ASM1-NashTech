@@ -99,16 +99,30 @@ public class ProductFacadeImpl implements ProductFacade {
         ProductResponse response = productMapper.toProductDetailsResponse(savedProduct);
 
         response.setAverageRating(BigDecimal.ZERO);
-        response.setImageKeys(getImageUrls(savedProduct.getImages()));
+        if (savedProduct.getImages() != null && !savedProduct.getImages().isEmpty()) {
+            response.setImageKeys(getImageUrls(savedProduct.getImages()));
+        } else {
+            response.setImageKeys(List.of(DEFAULT_THUMBNAIL));
+        }
         return BaseResponse.build(response, true);
     }
 
     @Override
-    public BaseResponse<ProductResponse> updateProduct(ProductRequest request, Long id) {
+    public BaseResponse<ProductResponse> updateProduct(ProductRequest request, Long id, List<MultipartFile> productImages) {
         Product product = productService.getProductById(id);
+
+        // Update basic product details first
         productMapper.updateEntity(request, product);
         product.setCategory(getCategoryOrThrow(request.getCategoryId()));
         product.setFeatured(request.isFeatured());
+
+        // Handle images properly
+        if (productImages != null && !productImages.isEmpty()) {
+            // Add new images
+            List<ProductImage> newImages = productImageService.saveImages(productImages, product);
+            product.getImages().addAll(newImages);
+        }
+
         Product updatedProduct = productService.updateProduct(product);
 
         ProductResponse response = productMapper.toProductDetailsResponse(updatedProduct);
@@ -130,16 +144,6 @@ public class ProductFacadeImpl implements ProductFacade {
                 .orElseThrow(() -> new UnauthorizedException("this feature"));
         productRatingService.rateProduct(product, user, rating);
         return BaseResponse.build("Rating successful", true);
-    }
-
-    @Override
-    public BaseResponse<String> uploadProductImages(Long productId, List<MultipartFile> files) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    @Override
-    public BaseResponse<String> deleteProductImage(String imageUrl) {
-        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     private ProductResponse mapToProductResponseWithThumbnail(Product product) {

@@ -171,7 +171,7 @@ public class UserControllerTest {
                 .thenReturn(BaseResponse.build(profileResponse, true));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/users/current")
+        mockMvc.perform(get("/api/v1/users/me")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is("200")))
@@ -199,7 +199,7 @@ public class UserControllerTest {
                 .thenReturn(BaseResponse.build(updatedProfile, true));
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/users/current")
+        mockMvc.perform(put("/api/v1/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest))
                         .with(csrf()))
@@ -332,7 +332,7 @@ public class UserControllerTest {
                 .build();
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/users/current")
+        mockMvc.perform(put("/api/v1/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .with(csrf()))
@@ -342,7 +342,7 @@ public class UserControllerTest {
     @Test
     void getCurrentUserProfile_NotLoggedIn_ReturnsUnauthorized() throws Exception {
         // Act & Assert
-        mockMvc.perform(get("/api/v1/users/current")
+        mockMvc.perform(get("/api/v1/users/me")
                         .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
@@ -357,7 +357,7 @@ public class UserControllerTest {
                 .build();
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/users/current")
+        mockMvc.perform(put("/api/v1/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .with(csrf()))
