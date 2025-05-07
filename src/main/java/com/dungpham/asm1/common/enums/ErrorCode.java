@@ -2,8 +2,7 @@ package com.dungpham.asm1.common.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -11,43 +10,51 @@ import java.util.regex.Pattern;
 
 @Getter
 @RequiredArgsConstructor
+@Slf4j
 public enum ErrorCode {
     NOT_FOUND("404", "%s not found"),
     BAD_REQUEST("400", "%s is invalid"),
     UNAUTHORIZED("401", "Unauthorized access to %s"),
-    VALIDATION_ERROR("422", "Validation error: %s"),
+    VALIDATION_ERROR("400", "Validation error: %s"),
     CONFLICT("409", "%s already exists"),
     FORBIDDEN("403", "Access to %s is forbidden"),
     INVALID_TOKEN("401", "Token is invalid or expired"),
     RATE_LIMIT_EXCEEDED("429", "Rate limit exceeded for %s"),
-    INTERNAL_ERROR("500", "An unexpected error occurred: %s"),
-    INVALID_ARGUMENT("400", "Invalid argument: %s - %s");
+    INTERNAL_ERROR("500", "Error happened while processing your request, contact admin for more info"),
+    INVALID_ARGUMENT("400", "Invalid argument: %s - %s"),
+    BAD_CREDENTIAL_LOGIN("401", "Invalid username or password"),
+    UNAUTHORIZED_ACCESS("403", "Access denied"),
+    INVALID_REQUEST("400", "Invalid request: %s"),
+    IO_ERROR("400", "IO error: %s"),
+    ACCESS_DENIED("403", "You don't have permission to access this resource"),
+    REDIS_CONNECTION_ERROR("503", "Service temporarily unavailable due to Redis connection failure"),
+    AUTHENTICATION_SERVICE_ERROR("401", "Authentication service error, please try again later"),
+    SERVICE_UNAVAILABLE("503", "Service temporarily unavailable, please try again later"),;
 
     private final String code;
     private final String messageTemplate;
-    private static final Logger logger = LoggerFactory.getLogger(ErrorCode.class);
     public String formatMessage(Object... args) {
-        logger.info("formatMessage called: code={}, template={}, args={}",
+        log.info("formatMessage called: code={}, template={}, args={}",
                 code, messageTemplate, Arrays.toString(args));
 
         if (args == null || args.length == 0) {
-            logger.warn("No args provided for template: {}", messageTemplate);
+            log.warn("No args provided for template: {}", messageTemplate);
             return messageTemplate;
         }
         
         int expectedArgs = countPlaceholders(messageTemplate);
         if (args.length < expectedArgs) {
-            logger.error("Insufficient arguments: expected={}, provided={}, template={}, args={}",
+            log.error("Insufficient arguments: expected={}, provided={}, template={}, args={}",
                     expectedArgs, args.length, messageTemplate, Arrays.toString(args));
             return String.valueOf(args[0]);
         }
 
         try {
             String result = String.format(messageTemplate, args);
-            logger.info("formatMessage success: result={}", result);
+            log.info("formatMessage success: result={}", result);
             return result;
         } catch (Exception e) {
-            logger.error("formatMessage failed: template={}, args={}, error={}",
+            log.error("formatMessage failed: template={}, args={}, error={}",
                     messageTemplate, Arrays.toString(args), e.getMessage(), e);
             e.printStackTrace(System.err);
             return String.valueOf(args[0]);

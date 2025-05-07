@@ -6,7 +6,6 @@ import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.infrastructure.aspect.Logged;
 import com.dungpham.asm1.repository.CategoryRepository;
-import com.dungpham.asm1.response.CategoryListResponse;
 import com.dungpham.asm1.service.CategoryService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -21,8 +20,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Logged
-    public List<CategoryListResponse> getAllCategories() {
-        return categoryRepository.findCategoryWithProductCount();
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAllByIsActiveTrue();
     }
 
     @Override
@@ -46,11 +45,30 @@ public class CategoryServiceImpl implements CategoryService {
     public Category updateCategory(Category categoryToUpdate, Long id) {
         Category existingCategory = categoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Category"));
-        validateCategory(categoryToUpdate, "update");
-        existingCategory.setName(categoryToUpdate.getName());
-        existingCategory.setDescription(categoryToUpdate.getDescription());
+
+        Category updateCandidate = new Category();
+        updateCandidate.setName(categoryToUpdate.getName());
+        updateCandidate.setDescription(categoryToUpdate.getDescription());
+
+        validateCategory(updateCandidate, "update");
+
+        boolean isNameChanged = !existingCategory.getName().equals(updateCandidate.getName());
+        boolean isDescriptionChanged = !existingCategory.getDescription().equals(updateCandidate.getDescription());
+
+        if (!isNameChanged && !isDescriptionChanged) {
+            return existingCategory;
+        }
+
+        if (isNameChanged) {
+            existingCategory.setName(updateCandidate.getName());
+        }
+        if (isDescriptionChanged) {
+            existingCategory.setDescription(updateCandidate.getDescription());
+        }
+
         return categoryRepository.save(existingCategory);
     }
+
 
     @Override
     @Logged
@@ -72,9 +90,20 @@ public class CategoryServiceImpl implements CategoryService {
                 if (category.getDescription() == null || category.getDescription().isEmpty()) {
                     throw new InvalidArgumentException("description", "Category description cannot be empty");
                 }
-                if (categoryRepository.findByNameAndIsActiveTrue(category.getName()).isPresent()) {
-                    throw new ConflictException("Category name already exists");
+
+                var existingCategoryOpt = categoryRepository.findByName(category.getName());
+                if (existingCategoryOpt.isPresent()) {
+                    Category existingCategory = existingCategoryOpt.get();
+
+                    if (operation.equalsIgnoreCase("update")) {
+                        if (category.getId() == null || !existingCategory.getId().equals(category.getId())) {
+                            throw new ConflictException("Category name");
+                        }
+                    } else {
+                        throw new ConflictException("Category name");
+                    }
                 }
+
                 break;
 
             case "delete":

@@ -3,7 +3,6 @@ package com.dungpham.asm1.facade;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.request.ProductRequest;
 import com.dungpham.asm1.response.BaseResponse;
-import com.dungpham.asm1.response.ProductDetailsResponse;
 import com.dungpham.asm1.response.ProductResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,13 +16,13 @@ public interface ProductFacade {
 
     BaseResponse<Page<ProductResponse>> getAllProducts(Specification<Product> spec, Pageable pageable);
 
-    BaseResponse<ProductDetailsResponse> getProductDetails(Long id);
+    BaseResponse<ProductResponse> getProductDetails(Long id);
 
-    BaseResponse<ProductDetailsResponse> createProduct(ProductRequest request, List<MultipartFile> productImages);
+    BaseResponse<ProductResponse> createProduct(ProductRequest request, List<MultipartFile> productImages);
 
-    BaseResponse<ProductDetailsResponse> updateProduct(ProductRequest request, Long id);
+    BaseResponse<ProductResponse> updateProduct(ProductRequest request, Long id, List<MultipartFile> productImages);
 
-    BaseResponse<Void> removeProduct(Long id);
+    BaseResponse<String> removeProduct(Long id);
 
     BaseResponse<String> rateProduct(Long productId, Integer rating);
 }

@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @Setter
-public class CategoryDetailsResponse {
+public class UserDetailsResponse {
     private Long id;
-    private String name;
-    private String description;
-    private LocalDateTime updatedAt;
-    private LocalDateTime createdAt;
+    private String email;
     private boolean isActive;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private String role;
 }

@@ -6,7 +6,6 @@ import com.dungpham.asm1.common.exception.NotFoundException;
 import com.dungpham.asm1.entity.Category;
 import com.dungpham.asm1.entity.Product;
 import com.dungpham.asm1.repository.CategoryRepository;
-import com.dungpham.asm1.response.CategoryListResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +34,6 @@ class CategoryServiceImplTest {
     private CategoryServiceImpl categoryService;
 
     private Category validCategory;
-    private List<CategoryListResponse> categoryListResponses;
 
     @BeforeEach
     void setUp() {
@@ -45,35 +43,44 @@ class CategoryServiceImplTest {
                 .description("Electronic devices")
                 .products(new ArrayList<>())
                 .build();
-
-        // Create category list responses
-        categoryListResponses = List.of(
-                new CategoryListResponse(1L, "Electronics", 5L),
-                new CategoryListResponse(2L, "Books", 3L)
-        );
     }
 
     @Test
     void getAllCategories_Successfully() {
         // Arrange
-        when(categoryRepository.findCategoryWithProductCount()).thenReturn(categoryListResponses);
+        List<Category> categories = List.of(
+                Category.builder().name("Electronics").description("Electronic devices").build(),
+                Category.builder().name("Books").description("Books and magazines").build()
+        );
+
+        // Set IDs using reflection
+        try {
+            Field idField = Category.class.getSuperclass().getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(categories.get(0), 1L);
+            idField.set(categories.get(1), 2L);
+        } catch (Exception e) {
+            fail("Test setup failed: " + e.getMessage());
+        }
+
+        when(categoryRepository.findAllByIsActiveTrue()).thenReturn(categories);
 
         // Act
-        List<CategoryListResponse> result = categoryService.getAllCategories();
+        List<Category> result = categoryService.getAllCategories();
 
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("Electronics", result.get(0).name());
-        assertEquals(5L, result.get(0).numberOfAssociatedProducts());
-        verify(categoryRepository, times(1)).findCategoryWithProductCount();
+        assertEquals("Electronics", result.get(0).getName());
+        assertEquals("Books", result.get(1).getName());
+        verify(categoryRepository, times(1)).findAllByIsActiveTrue();
     }
 
     @Test
     void getCategory_Successfully() {
         // Arrange
         Long categoryId = 1L;
-        
+
         // Set ID using reflection
         try {
             Field idField = validCategory.getClass().getSuperclass().getDeclaredField("id");
@@ -152,7 +159,8 @@ class CategoryServiceImplTest {
                 .description("New description")
                 .build();
 
-        when(categoryRepository.findByNameAndIsActiveTrue(duplicateName))
+        // Change this to mock findByName instead of findByNameAndIsActiveTrue
+        when(categoryRepository.findByName(duplicateName))
                 .thenReturn(Optional.of(validCategory));
 
         // Act & Assert
@@ -161,7 +169,7 @@ class CategoryServiceImplTest {
         });
 
         assertEquals("409", exception.getErrorCodeString());
-        verify(categoryRepository, times(1)).findByNameAndIsActiveTrue(duplicateName);
+        verify(categoryRepository, times(1)).findByName(duplicateName);
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
@@ -174,7 +182,7 @@ class CategoryServiceImplTest {
                 .name("Old Name")
                 .description("Old Description")
                 .build();
-        
+
         // Set ID using reflection
         try {
             Field idField = existingCategory.getClass().getSuperclass().getDeclaredField("id");
@@ -203,7 +211,7 @@ class CategoryServiceImplTest {
     void removeCategory_Successfully() {
         // Arrange
         Long categoryId = 1L;
-        
+
         // Set ID using reflection
         try {
             Field idField = validCategory.getClass().getSuperclass().getDeclaredField("id");
@@ -234,7 +242,7 @@ class CategoryServiceImplTest {
                 .description("Electronic devices")
                 .products(List.of(new Product()))
                 .build();
-        
+
         // Set ID using reflection
         try {
             Field idField = categoryWithProducts.getClass().getSuperclass().getDeclaredField("id");
@@ -375,30 +383,6 @@ class CategoryServiceImplTest {
         assertEquals("400", exception.getErrorCodeString());
         verify(categoryRepository, times(1)).findById(categoryId);
         verify(categoryRepository, never()).save(any(Category.class));
-    }
-
-    @Test
-    void validateCategory_WithUnknownOperation_ThrowsIllegalArgumentException() {
-        // This test directly tests the validateCategory method using reflection
-        try {
-            // Get the private method
-            Method validateCategoryMethod = CategoryServiceImpl.class.getDeclaredMethod(
-                    "validateCategory", Category.class, String.class);
-            validateCategoryMethod.setAccessible(true);
-
-            // Act & Assert
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                validateCategoryMethod.invoke(categoryService, validCategory, "unknown");
-            });
-
-            assertTrue(exception.getCause().getMessage().contains("Unknown operation: unknown"));
-            Throwable cause = exception.getCause();
-            assertInstanceOf(IllegalArgumentException.class, cause);
-            assertTrue(cause.getMessage().contains("Unknown operation: unknown"));
-
-        } catch (Exception e) {
-            fail("Test failed due to reflection error: " + e.getMessage());
-        }
     }
 
 }

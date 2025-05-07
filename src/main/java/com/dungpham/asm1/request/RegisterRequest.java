@@ -24,20 +24,18 @@ public class RegisterRequest {
     @Schema(description = "email", example = "email@email.com")
     private String email;
 
-    @NotNull(message = "First name is required")
-    @NotBlank(message = "First name cannot be blank")
-    private String firstName;
-
-    @NotNull(message = "Last name is required")
-    @NotBlank(message = "Last name cannot be blank")
-    private String lastName;
-
     @NotNull(message = "Password is required")
     @NotBlank(message = "Password cannot be blank")
     @Pattern(
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
             message =
                     "The password must be at least 8 characters, including letters, numbers, and special characters.")
-    @Schema(description = "password", example = "NguyenThanhSr4@")
+    @Schema(description = "password", example = "Password123!")
     private String password;
+
+
+    @NotNull(message = "Password is required")
+    @NotBlank(message = "Password cannot be blank")
+    @Schema(description = "confirm password", example = "Password123!")
+    private String confirmPassword;
 }
